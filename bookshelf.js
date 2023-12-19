@@ -30,6 +30,8 @@ const secondBook = new Book("The Long Way to a Small, Angry Planet", "Becky",
 firstBook.addToBookshelf(bookshelf);
 secondBook.addToBookshelf(bookshelf);
 
+sortByField(bookshelf, "read", 1);
+
 console.log(bookshelf);
 
 const bookList = document.querySelector(".book-list");
@@ -57,8 +59,8 @@ bookshelf.forEach(_e => {
     if (_e.read) {
         createBookDisplayItem(_e.dateRead, 
             `Date read: ${_e.dateRead}`, itemContent);
-            createBookDisplayItem(_e.rating, 
-                `Rating: ${_e.rating}/5`, itemContent);
+        createBookDisplayItem(_e.rating, 
+            `Rating: ${_e.rating}/5`, itemContent);
     }
     
     itemContent.style.display = "none"
@@ -76,9 +78,6 @@ function createBookDisplayItem(_fieldIsValid, _str, _parentElement) {
 
 const bookDisplay = document.getElementsByClassName("book-display");
 
-//const bookDisplay = [1, 2, 3, 4];
-console.log(bookDisplay);
-
 for (let e of bookDisplay) {
     e.addEventListener("click", () => {
         e.classList.toggle("active");
@@ -87,3 +86,34 @@ for (let e of bookDisplay) {
             content.style.display = "block";
     });
 };
+
+function sortByField(_bookshelf, _field, _dir) {
+    _dir > 0 ? _dir = 1 : _dir = -1;
+
+    _bookshelf.sort((_a, _b) => {
+        let val1 = _a[_field];
+        let val2 = _b[_field];
+
+        if (typeof val1 === "string") {
+            val1 = val1.toLocaleLowerCase();
+            val2 = val2.toLocaleLowerCase();
+
+            if (_field === "title") {
+                val1 = removeLeadingArticle(val1);
+                val2 = removeLeadingArticle(val2);
+            }
+        }
+        return val1 > val2 ? _dir : _dir * -1;
+    });
+}
+
+function removeLeadingArticle(_str) {
+    const lower = _str.toLocaleLowerCase();
+
+    if (lower.startsWith("the ")) {
+        _str = _str.slice(4, _str.length);
+    } else if (lower.startsWith("a ")) {
+        _str = _str.slice(2, _str.length);
+    }
+    return _str;
+}
