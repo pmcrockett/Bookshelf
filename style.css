@@ -5,3 +5,22 @@
 .book-display {
     text-align: left;
 }
+
+.book-display + .content {
+    display: grid;
+    grid-template-columns: auto;
+    grid-auto-rows: auto;
+}
+
+.book-field-row {
+    display: grid;
+    grid-template-columns: 200px 200px;
+}
+
+.hidden {
+    display: none;
+}
+
+.invalid {
+    display: none;
+}

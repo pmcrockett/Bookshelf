@@ -1,17 +1,26 @@
+String.prototype.toSnakeCase = function() {
+    return this.toLocaleLowerCase().replace(" ", "-");
+};
+
+let id = 0;
 const bookshelf = [];
 
 function Book(_title, _authorFirst, _authorLast, _pageCount, _desc, _format, 
         _read, _rating, _dateRead) {
-    this.title = _title;
-    this.authorFirst = _authorFirst;
-    this.authorLast = _authorLast;
-    this.pageCount = _pageCount;
-    this.desc = _desc;
-    this.format = _format;
-    this.read = _read;
-    this.rating = Math.max(1, Math.min(_rating, 5));
-    this.dateRead = _dateRead;
+    this.title = _title || "[Untitled]";
+    this.authorFirst = _authorFirst || "";
+    this.authorLast = _authorLast || "";
+    this.pageCount = _pageCount || "";
+    this.desc = _desc || "";
+    this.format = _format || "N/A";
+    this.read = _read || "N/A";
+    console.log(this.read);
+    this.rating = _rating || "N/A";
+    this.dateRead = _dateRead || "";
+    this.id = ++Book.prototype.nextId;
 }
+
+Book.prototype.nextId = -1;
 
 Book.prototype.setRead = function(_read, _dateRead) {
     this.read = _read;
@@ -22,58 +31,347 @@ Book.prototype.addToBookshelf = function(_bookshelf) {
     _bookshelf.push(this);
 };
 
-const firstBook = new Book("Nona the Ninth", "Tamsyn", "Muir", 550, 
-    "Third in the Locked Tomb series.", "Digital", true, 5, "12/10/2023");
-const secondBook = new Book("The Long Way to a Small, Angry Planet", "Becky", 
-    "Chambers", 440, "It's sci-fi.", "Digital", false);
+const newBook = [];
+newBook[0] = new Book("Nona the Ninth", "Tamsyn", "Muir", 550, 
+    "Third in the Locked Tomb series.", "Digital", "Yes", "5/5", "2023-12-10");
+newBook[1] = new Book("The Long Way to a Small, Angry Planet", "Becky", 
+    "Chambers", 440, "It's sci-fi.", "Digital", "No");
+newBook[2] = new Book();
 
-firstBook.addToBookshelf(bookshelf);
-secondBook.addToBookshelf(bookshelf);
+newBook.forEach(_e => _e.addToBookshelf(bookshelf));
 
 sortByField(bookshelf, "read", 1);
-
-console.log(bookshelf);
 
 const bookList = document.querySelector(".book-list");
 
 bookshelf.forEach(_e => {
     let listItem = document.createElement("button");
+    listItem.classList.add(`id-${_e.id}`);
     listItem.classList.add("book-display");
-    let node = document.createTextNode(`${_e.title.toString()} (${_e.authorLast}, ${_e.authorFirst})`);
+    let combinedAuthor = getCombinedAuthor(_e.authorFirst, _e.authorLast, -1);
+    let node = document.createTextNode(`${_e.title.toString()}` + 
+        `${combinedAuthor.length ? ` (${combinedAuthor})` : ""}`);
     listItem.appendChild(node);
-    let itemContent = document.createElement("div");
+    let itemContent = document.createElement("form");
+    itemContent.classList.add(`id-${_e.id}`);
     itemContent.classList.add("content");
-    createBookDisplayItem(_e.title, 
-        `Title: ${_e.title}`, itemContent);
-    createBookDisplayItem(_e.authorFirst && _e.authorLast, 
-        `Author: ${_e.authorFirst} ${_e.authorLast}`, itemContent);
-    createBookDisplayItem(_e.pageCount, 
-        `Page count: ${_e.pageCount}`, itemContent);
-    createBookDisplayItem(_e.desc, 
-        `Description: ${_e.desc}`, itemContent);
-    createBookDisplayItem(_e.format, 
-        `Format: ${_e.format}`, itemContent);
-    createBookDisplayItem(_e.read, 
-        `Read: ${_e.read ? "Yes" : "No"}`, itemContent);
-    
-    if (_e.read) {
-        createBookDisplayItem(_e.dateRead, 
-            `Date read: ${_e.dateRead}`, itemContent);
-        createBookDisplayItem(_e.rating, 
-            `Rating: ${_e.rating}/5`, itemContent);
-    }
-    
+    createBookDisplayItem(_e, 
+        "Title:", `${_e.title}`, itemContent);
+    createBookDisplayItem(_e, 
+        "Author:", getCombinedAuthor(_e.authorFirst, _e.authorLast, 1), itemContent);
+    createBookDisplayItem(_e, 
+        "Page count:", `${_e.pageCount}`, itemContent);
+    createBookDisplayItem(_e, 
+        "Description:", `${_e.desc}`, itemContent);
+    createBookDisplayItem(_e, 
+        "Format:", `${_e.format}`, itemContent);
+    createBookDisplayItem(_e, 
+        "Read:", `${_e.read}`, itemContent);
+    createBookDisplayItem(_e, 
+        "Date read:", `${_e.dateRead}`, itemContent);
+    createBookDisplayItem(_e, 
+        "Rating:", `${_e.rating}`, itemContent);
+  
     itemContent.style.display = "none"
     bookList.appendChild(listItem);
     bookList.appendChild(itemContent);
+
+    let editButton = document.createElement("button");
+    editButton.appendChild(document.createTextNode("Edit"));
+    editButton.style.display = "inline";
+    editButton.classList.add(_e.id);
+
+    editButton.addEventListener("click", _event => {
+        _event.preventDefault();
+        const fieldContent = document.getElementsByClassName(`id-${_e.id} book-field-content`);
+        const fieldInput = document.getElementsByClassName(`id-${_e.id} book-field-input`);
+
+        if (!fieldContent[0].classList.contains("hidden")) {
+            for (let item of fieldContent) {
+                item.parentElement.classList.remove("invalid");
+                item.classList.add("hidden");
+            }
+            for (let item of fieldInput) {
+                item.classList.remove("hidden");
+            }
+        } else {
+            // Submit form
+            const formHtml = document.querySelector(`.id-${_e.id}.content`);
+            console.log(formHtml);
+            const form = new FormData(formHtml);
+            console.log("Data id:" + `.id-${_e.id}`);
+
+            applyInput(form, _e.id, "title");
+            applyInput(form, _e.id, "author");
+            applyInput(form, _e.id, "page-count");
+            applyInput(form, _e.id, "description");
+            applyInput(form, _e.id, "format");
+            applyInput(form, _e.id, "read");
+            applyInput(form, _e.id, "date-read");
+            applyInput(form, _e.id, "rating");
+
+            for (let item of fieldContent) {
+                let parent = item.parentElement;
+                
+                // if (item.textContent == "null") {
+                //     item.parentElement.classList.add("invalid");
+                // }
+
+                item.classList.remove("hidden");
+            }
+            for (let item of fieldInput) {
+                item.classList.add("hidden");
+            }
+        }
+    });
+
+    itemContent.appendChild(editButton);
+
 });
 
-function createBookDisplayItem(_fieldIsValid, _str, _parentElement) {
-    if (_fieldIsValid == null) return;
-    let newDiv = document.createElement("div");
-    let node = document.createTextNode(_str);
-    newDiv.appendChild(node);
-    _parentElement.appendChild(newDiv);
+function applyInput(_formDat, _id, _snakeClassName) {
+    let text = "";
+
+    if (_snakeClassName == "author") {
+        const first = _formDat.get(`${_snakeClassName}-0-input-${_id}`);
+        const last = _formDat.get(`${_snakeClassName}-1-input-${_id}`);
+        text = getCombinedAuthor(first, last, 1);    
+    } else {
+        text = _formDat.get(`${_snakeClassName}-input-${_id}`);
+    }
+    
+    if (((_snakeClassName == "format" || _snakeClassName == "read" 
+            || _snakeClassName == "rating") && text === "N/A") 
+            || text == "") {
+        let rowToHide = document.querySelector(`.id-${_id}.book-field-row.${_snakeClassName}`);
+        rowToHide.classList.add("invalid");
+    };
+
+    document.querySelector(`.id-${_id}.book-field-content.${_snakeClassName}`)
+        .textContent = text;
+}
+
+function getRowValidity(_fieldName, _fieldContent) {
+    if (_fieldContent === null) {
+        return false;
+    } else if (_fieldName == "Read:" || _fieldName == "Rating:"
+            || _fieldName == "Format:") {
+        if (_fieldContent == "N/A") return false;
+    } else {
+        if (_fieldContent == "") return false;
+    }
+
+    return true;
+}
+
+function getCombinedAuthor(_first, _last, _order) {
+    _order = _order > 0 ? 1 : -1;
+    let combinedAuthor = "";
+    if (_first && _last) {
+        if (_order > 0) {
+            combinedAuthor = `${_first} ${_last}`;
+        } else {
+            combinedAuthor = `${_last}, ${_first}`;
+        }
+    } else if (_last) {
+        combinedAuthor = `${_last}`;
+    } else if (_first) {
+        combinedAuthor = `${_first}`;
+    }
+
+    return combinedAuthor;
+}
+
+function createBookDisplayItem(_e, _fieldName, _fieldContent, _parentElement) {
+    function formatElem(_elem, _text, _class) {
+        if (_text.length) {
+            _elem.appendChild(document.createTextNode(_text));
+        }
+        _elem.classList.add(..._class);
+        return _elem;
+    }
+
+    const snakeClassName = _fieldName.toSnakeCase().slice(0, _fieldName.length - 1);
+
+    //Row div
+    let rowElem = document.createElement("div");
+    rowElem = formatElem(rowElem, "", [
+        `id-${_e.id}`, 
+        "book-field-row", 
+        snakeClassName]);
+    if (!getRowValidity(_fieldName, _fieldContent)) {
+        rowElem.classList.add("invalid");
+    }
+
+    // Static fields
+    let newElem = document.createElement("div");
+    newElem = document.createElement("div");
+    newElem = formatElem(newElem, _fieldName, [
+        `id-${_e.id}`, 
+        "book-field-name", 
+        snakeClassName]);
+    //if (!_fieldIsValid) {
+    //    newElem.style.display = "none";
+    //}
+    rowElem.appendChild(newElem);
+
+    newElem = document.createElement("div");
+    newElem = formatElem(newElem, _fieldContent, [
+        `id-${_e.id}`, 
+        "book-field-content", 
+        snakeClassName]);
+    // if (!_fieldIsValid) {
+    //     newElem.style.display = "none";
+    // }
+    rowElem.appendChild(newElem);
+
+    // Input fields
+    if (_fieldName == "Author:") {
+        newElem = document.createElement("div");
+        newElem = formatElem(newElem, "", [
+            `id-${_e.id}`, 
+            "book-field-input",]);
+        //newElem.style.display = "grid";
+        newElem.style.gridAutoFlow = "column";
+
+        for (let i = 0; i < 2; i++) {
+            let authorElem = document.createElement("input");
+            authorElem = formatElem(authorElem, "", [
+                `id-${_e.id}`, 
+                "book-field-input", 
+                snakeClassName + "-" + i]);
+            authorElem.setAttribute("value", i == 0 ? _e.authorFirst : _e.authorLast);
+            //authorElem.appendChild(document.createTextNode(i == 0 ? _e.authorFirst : _e.authorLast));
+            authorElem.setAttribute("name", `author-${i}-input-${_e.id}`);
+            //authorElem.classList.add("hidden");
+            newElem.appendChild(authorElem);
+        }
+
+        newElem.classList.add("hidden");
+    } else if (_fieldName == "Rating:") {
+        newElem = document.createElement("fieldset");
+        newElem = formatElem(newElem, "", [
+            `id-${_e.id}`, 
+            "book-field-input",]);
+        //newElem.style.display = "grid";
+        newElem.style.gridAutoFlow = "column";
+        const ratingLabel = ["N/A", "1", "2", "3", "4", "5"]
+        const ratingVal = ["N/A", "1/5", "2/5", "3/5", "4/5", "5/5"]
+
+        for (let i = 0; i < 6; i++) {
+            let ratingElem = document.createElement("input");
+            ratingElem = formatElem(ratingElem, "", [
+                `id-${_e.id}`, 
+                "book-field-input", 
+                snakeClassName + "-" + i]);
+            ratingElem.setAttribute("type", "radio");
+            ratingElem.setAttribute("name", `rating-input-${_e.id}`);
+            ratingElem.setAttribute("id", `rating-input-${_e.id}-id-${i}`);
+            ratingElem.setAttribute("value", ratingVal[i]);
+
+            if (_fieldContent == ratingVal[i]) {
+                ratingElem.setAttribute("checked", "checked");
+            }
+            //ratingElem.classList.add("hidden");
+            newElem.appendChild(ratingElem);
+
+            let newLabel = document.createElement("label");
+            newLabel.setAttribute("for", `rating-input-${_e.id}-id-${i}`);
+            newLabel = formatElem(newLabel, ratingLabel[i], []);
+            newElem.appendChild(newLabel);
+        }
+
+        newElem.classList.add("hidden");
+    } else if (_fieldName == "Format:") {
+        newElem = document.createElement("select");
+        newElem = formatElem(newElem, "", [
+            `id-${_e.id}`, 
+            "book-field-input", 
+            snakeClassName]);
+        newElem.setAttribute("name", `format-input-${_e.id}`);
+
+        for (let i = 0; i < 3; i++) {
+            let optionElem = document.createElement("option");
+            let val = i == 0 ? "N/A" : i == 1 ? "Print" : "Digital";
+            optionElem = formatElem(optionElem, val, [
+                `id-${_e.id}`, 
+                snakeClassName + "-" + i]);
+            optionElem.setAttribute("value", val);
+            if (val == _fieldContent) {
+                optionElem.setAttribute("selected", "selected");
+            }
+            newElem.appendChild(optionElem);
+        }
+
+        newElem.classList.add("hidden");
+    } else if (_fieldName == "Read:") {
+        newElem = document.createElement("select");
+        newElem = formatElem(newElem, "", [
+            `id-${_e.id}`, 
+            "book-field-input", 
+            snakeClassName]);
+        newElem.setAttribute("name", `read-input-${_e.id}`);
+
+        for (let i = 0; i < 3; i++) {
+            let optionElem = document.createElement("option");
+            let val = i == 0 ? "N/A" : i == 1 ? "Yes" : "No";
+            optionElem = formatElem(optionElem, val, [
+                `id-${_e.id}`, 
+                snakeClassName + "-" + i]);
+            optionElem.setAttribute("value", val);
+            if (val == _fieldContent) {
+                optionElem.setAttribute("selected", "selected");
+            }
+            newElem.appendChild(optionElem);
+        }
+
+        newElem.classList.add("hidden");
+    } else {
+        newElem = document.createElement(_fieldName == "Description:" ? "textarea" : "input");
+        let textContent = "";
+
+        if (_fieldName == "Title:") {
+            textContent = _fieldContent;
+            newElem.setAttribute("value", _fieldContent);
+        } else if (_fieldName == "Page count:") {
+            newElem.setAttribute("type", "number");
+            newElem.setAttribute("value", _fieldContent);
+        } else if (_fieldName == "Description:") {
+            textContent = _fieldContent;
+        } else if (_fieldName == "Format:") {
+            newElem.setAttribute("type", "list");
+            newElem.setAttribute("value", _fieldContent);
+        // } else if (_fieldName == "Read:") {
+        //     newElem.setAttribute("type", "checkbox");
+        //     if (_fieldContent == "Yes") {
+        //         newElem.setAttribute("checked", "checked");
+        //     }
+        } else if (_fieldName == "Date read:") {
+            newElem.setAttribute("type", "date");
+            newElem.setAttribute("value", _fieldContent || "");
+        }
+
+        newElem = formatElem(newElem, textContent, [
+            `id-${_e.id}`, 
+            "book-field-input", 
+            snakeClassName]);
+        newElem.setAttribute("name", `${snakeClassName}-input-${_e.id}`);
+        newElem.classList.add("hidden");
+    }
+
+    // if (!_fieldIsValid) {
+    //     //newElem.style.display = "none";
+    //     //newElem.classList.add("invalid");
+    //     //rowElem.style.display = "none";
+    //     rowElem.classList.add("invalid");
+    // }
+
+    rowElem.appendChild(newElem);
+    _parentElement.appendChild(rowElem);
+}
+
+function validateInput() {
+
 }
 
 const bookDisplay = document.getElementsByClassName("book-display");
@@ -82,8 +380,8 @@ for (let e of bookDisplay) {
     e.addEventListener("click", () => {
         e.classList.toggle("active");
         let content = e.nextElementSibling;
-        content.style.display === "block" ? content.style.display = "none" :
-            content.style.display = "block";
+        content.style.display === "grid" ? content.style.display = "none" :
+            content.style.display = "grid";
     });
 };
 
