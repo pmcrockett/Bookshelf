@@ -47,6 +47,20 @@ bookshelf.forEach(_e => {
     let listItem = document.createElement("button");
     listItem.classList.add(`id-${_e.id}`);
     listItem.classList.add("book-display");
+
+    listItem.addEventListener("click", () => {
+        listItem.classList.toggle("active");
+        let content = listItem.nextElementSibling;
+        content.style.display === "grid" ? content.style.display = "none" :
+            content.style.display = "grid";
+        
+        let editButton = document.querySelector(`.id-${_e.id}.edit`);
+        
+        if (editButton.textContent != "Edit") {
+            editButton.dispatchEvent(new Event("click"));
+        }
+    });
+
     let combinedAuthor = getCombinedAuthor(_e.authorFirst, _e.authorLast, -1);
     let node = document.createTextNode(`${_e.title.toString()}` + 
         `${combinedAuthor.length ? ` (${combinedAuthor})` : ""}`);
@@ -79,7 +93,7 @@ bookshelf.forEach(_e => {
     let editButton = document.createElement("button");
     editButton.appendChild(document.createTextNode("Edit"));
     editButton.style.display = "inline";
-    editButton.classList.add(_e.id);
+    editButton.classList.add(`id-${_e.id}`, "edit");
 
     editButton.addEventListener("click", _event => {
         _event.preventDefault();
@@ -96,6 +110,7 @@ bookshelf.forEach(_e => {
             }
 
             resetForm(_e.id);
+            editButton.textContent = "Done";
         } else {
             // Submit form
             const formHtml = document.querySelector(`.id-${_e.id}.content`);
@@ -111,12 +126,21 @@ bookshelf.forEach(_e => {
             applyInput(form, _e.id, "rating");
 
             for (let item of fieldContent) {
-                let parent = item.parentElement;
                 item.classList.remove("hidden");
             }
             for (let item of fieldInput) {
                 item.classList.add("hidden");
             }
+
+            let bookButton = document.querySelector(`.id-${_e.id}.book-display`);
+            let title = document.querySelector(`.id-${_e.id}.book-field-content.title`).textContent;
+            let authorFirst = form.get(`author-0-input-${_e.id}`);
+            let authorLast = form.get(`author-1-input-${_e.id}`);
+            let combinedAuthor = getCombinedAuthor(authorFirst, authorLast, -1);
+            bookButton.textContent = title +
+                `${combinedAuthor.length ? ` (${combinedAuthor})` : ""}`
+
+            editButton.textContent = "Edit";
         }
     });
 
@@ -130,16 +154,20 @@ function applyInput(_formDat, _id, _snakeClassName) {
     if (_snakeClassName == "author") {
         const first = _formDat.get(`${_snakeClassName}-0-input-${_id}`);
         const last = _formDat.get(`${_snakeClassName}-1-input-${_id}`);
-        //text = getCombinedAuthor(first, last, 1);
+        
+        let firstContent = document.querySelector(`.id-${_id}.book-field-content.${_snakeClassName}-0`);
+        firstContent.textContent = first;
+        let lastContent = document.querySelector(`.id-${_id}.book-field-content.${_snakeClassName}-1`);
+        lastContent.textContent = last;
+
         if (first == "" && last == "") {
             let rowToHide = document.querySelector(`.id-${_id}.book-field-row.${_snakeClassName}`);
             rowToHide.classList.add("invalid");
+        } else if (first.length) {
+            firstContent.style.marginRight = "0.33em";
+        } else {
+            firstContent.style.marginRight = "0px";
         }
-
-        document.querySelector(`.id-${_id}.book-field-content.${_snakeClassName}-0`)
-            .textContent = first;
-        document.querySelector(`.id-${_id}.book-field-content.${_snakeClassName}-1`)
-            .textContent = last;
     } else {
         text = _formDat.get(`${_snakeClassName}-input-${_id}`);
 
@@ -200,8 +228,9 @@ function resetForm(_id) {
     
     tags.forEach(_tag => {
         console.log(`.id-${_id}.book-field-input.${_tag}`);
-        document.querySelector(`.id-${_id}.book-field-input.${_tag}`).value =
-            document.querySelector(`.id-${_id}.book-field-content.${_tag}`).textContent;
+        let elem = document.querySelector(`.id-${_id}.book-field-input.${_tag}`);
+        let newVal = document.querySelector(`.id-${_id}.book-field-content.${_tag}`).textContent;
+        elem.setAttribute("value", newVal);
     });
 
     let ratingVal = document.querySelector(`.id-${_id}.book-field-content.rating`).textContent;
@@ -214,13 +243,6 @@ function resetForm(_id) {
             break;
         }
     }
-    //console.log(document.querySelector(`.id-${_id}.book-field-content.title`));
-    // document.querySelector(`.id-${_id}.book-field-input.title`).value =
-    //     document.querySelector(`.id-${_id}.book-field-content.title`).textContent;
-    // document.querySelector(`.id-${_id}.book-field-input.page-count`).value =
-    //     document.querySelector(`.id-${_id}.book-field-content.page-count`).textContent;
-    // document.querySelector(`.id-${_id}.book-field-input.date-read`).value =
-    //     document.querySelector(`.id-${_id}.book-field-content.date-read`).textContent;
 }
 
 function createBookDisplayItem(_e, _fieldName, _fieldContent, _parentElement) {
@@ -435,21 +457,6 @@ function createBookDisplayItem(_e, _fieldName, _fieldContent, _parentElement) {
     rowElem.appendChild(newElem);
     _parentElement.appendChild(rowElem);
 }
-
-function validateInput() {
-
-}
-
-const bookDisplay = document.getElementsByClassName("book-display");
-
-for (let e of bookDisplay) {
-    e.addEventListener("click", () => {
-        e.classList.toggle("active");
-        let content = e.nextElementSibling;
-        content.style.display === "grid" ? content.style.display = "none" :
-            content.style.display = "grid";
-    });
-};
 
 function sortByField(_bookshelf, _field, _dir) {
     _dir > 0 ? _dir = 1 : _dir = -1;
