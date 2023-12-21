@@ -14,7 +14,6 @@ function Book(_title, _authorFirst, _authorLast, _pageCount, _desc, _format,
     this.desc = _desc || "";
     this.format = _format || "N/A";
     this.read = _read || "N/A";
-    console.log(this.read);
     this.rating = _rating || "N/A";
     this.dateRead = _dateRead || "";
     this.id = ++Book.prototype.nextId;
@@ -32,10 +31,10 @@ Book.prototype.addToBookshelf = function(_bookshelf) {
 };
 
 const newBook = [];
-newBook[0] = new Book("Nona the Ninth", "Tamsyn", "Muir", 550, 
+newBook[0] = new Book("Nona the Ninth", "Tamsyn", "Muir", "550", 
     "Third in the Locked Tomb series.", "Digital", "Yes", "5/5", "2023-12-10");
 newBook[1] = new Book("The Long Way to a Small, Angry Planet", "Becky", 
-    "Chambers", 440, "It's sci-fi.", "Digital", "No");
+    "Chambers", "440", "It's sci-fi.", "Digital", "No");
 newBook[2] = new Book();
 
 newBook.forEach(_e => _e.addToBookshelf(bookshelf));
@@ -56,21 +55,22 @@ bookshelf.forEach(_e => {
     itemContent.classList.add(`id-${_e.id}`);
     itemContent.classList.add("content");
     createBookDisplayItem(_e, 
-        "Title:", `${_e.title}`, itemContent);
+        "Title:", _e.title, itemContent);
     createBookDisplayItem(_e, 
-        "Author:", getCombinedAuthor(_e.authorFirst, _e.authorLast, 1), itemContent);
+        //"Author:", getCombinedAuthor(_e.authorFirst, _e.authorLast, 1), itemContent);
+        "Author:", [_e.authorFirst, _e.authorLast], itemContent);
     createBookDisplayItem(_e, 
-        "Page count:", `${_e.pageCount}`, itemContent);
+        "Page count:", _e.pageCount, itemContent);
     createBookDisplayItem(_e, 
-        "Description:", `${_e.desc}`, itemContent);
+        "Description:", _e.desc, itemContent);
     createBookDisplayItem(_e, 
-        "Format:", `${_e.format}`, itemContent);
+        "Format:", _e.format, itemContent);
     createBookDisplayItem(_e, 
-        "Read:", `${_e.read}`, itemContent);
+        "Read:", _e.read, itemContent);
     createBookDisplayItem(_e, 
-        "Date read:", `${_e.dateRead}`, itemContent);
+        "Date read:", _e.dateRead, itemContent);
     createBookDisplayItem(_e, 
-        "Rating:", `${_e.rating}`, itemContent);
+        "Rating:", _e.rating, itemContent);
   
     itemContent.style.display = "none"
     bookList.appendChild(listItem);
@@ -94,12 +94,12 @@ bookshelf.forEach(_e => {
             for (let item of fieldInput) {
                 item.classList.remove("hidden");
             }
+
+            resetForm(_e.id);
         } else {
             // Submit form
             const formHtml = document.querySelector(`.id-${_e.id}.content`);
-            console.log(formHtml);
             const form = new FormData(formHtml);
-            console.log("Data id:" + `.id-${_e.id}`);
 
             applyInput(form, _e.id, "title");
             applyInput(form, _e.id, "author");
@@ -112,11 +112,6 @@ bookshelf.forEach(_e => {
 
             for (let item of fieldContent) {
                 let parent = item.parentElement;
-                
-                // if (item.textContent == "null") {
-                //     item.parentElement.classList.add("invalid");
-                // }
-
                 item.classList.remove("hidden");
             }
             for (let item of fieldInput) {
@@ -135,20 +130,37 @@ function applyInput(_formDat, _id, _snakeClassName) {
     if (_snakeClassName == "author") {
         const first = _formDat.get(`${_snakeClassName}-0-input-${_id}`);
         const last = _formDat.get(`${_snakeClassName}-1-input-${_id}`);
-        text = getCombinedAuthor(first, last, 1);    
+        //text = getCombinedAuthor(first, last, 1);
+        if (first == "" && last == "") {
+            let rowToHide = document.querySelector(`.id-${_id}.book-field-row.${_snakeClassName}`);
+            rowToHide.classList.add("invalid");
+        }
+
+        document.querySelector(`.id-${_id}.book-field-content.${_snakeClassName}-0`)
+            .textContent = first;
+        document.querySelector(`.id-${_id}.book-field-content.${_snakeClassName}-1`)
+            .textContent = last;
     } else {
         text = _formDat.get(`${_snakeClassName}-input-${_id}`);
+
+        if (_snakeClassName == "page-count") {
+            if (text != "" && text != "0") {
+                text = String(Math.max(1, parseInt(text)));
+            } else text = "";
+        }
+        
+        if (((_snakeClassName == "format" || _snakeClassName == "read" 
+                || _snakeClassName == "rating") && text === "N/A") 
+                || text == "") {
+            let rowToHide = document.querySelector(`.id-${_id}.book-field-row.${_snakeClassName}`);
+            rowToHide.classList.add("invalid");
+        };
+
+        document.querySelector(`.id-${_id}.book-field-content.${_snakeClassName}`)
+            .textContent = text;
     }
     
-    if (((_snakeClassName == "format" || _snakeClassName == "read" 
-            || _snakeClassName == "rating") && text === "N/A") 
-            || text == "") {
-        let rowToHide = document.querySelector(`.id-${_id}.book-field-row.${_snakeClassName}`);
-        rowToHide.classList.add("invalid");
-    };
 
-    document.querySelector(`.id-${_id}.book-field-content.${_snakeClassName}`)
-        .textContent = text;
 }
 
 function getRowValidity(_fieldName, _fieldContent) {
@@ -182,6 +194,35 @@ function getCombinedAuthor(_first, _last, _order) {
     return combinedAuthor;
 }
 
+function resetForm(_id) {
+    const tags = ["title", "author-0", "author-1", "page-count", "description",
+        "format", "read", "date-read"]
+    
+    tags.forEach(_tag => {
+        console.log(`.id-${_id}.book-field-input.${_tag}`);
+        document.querySelector(`.id-${_id}.book-field-input.${_tag}`).value =
+            document.querySelector(`.id-${_id}.book-field-content.${_tag}`).textContent;
+    });
+
+    let ratingVal = document.querySelector(`.id-${_id}.book-field-content.rating`).textContent;
+    let ratingLabel = document.getElementsByClassName(`rating-input-label-${_id}`);
+
+    for (let rating of ratingLabel) {
+        if (rating.textContent == ratingVal) {
+            let ratingInput = document.getElementById(rating.getAttribute("for"));
+            ratingInput.setAttribute("checked", "checked");
+            break;
+        }
+    }
+    //console.log(document.querySelector(`.id-${_id}.book-field-content.title`));
+    // document.querySelector(`.id-${_id}.book-field-input.title`).value =
+    //     document.querySelector(`.id-${_id}.book-field-content.title`).textContent;
+    // document.querySelector(`.id-${_id}.book-field-input.page-count`).value =
+    //     document.querySelector(`.id-${_id}.book-field-content.page-count`).textContent;
+    // document.querySelector(`.id-${_id}.book-field-input.date-read`).value =
+    //     document.querySelector(`.id-${_id}.book-field-content.date-read`).textContent;
+}
+
 function createBookDisplayItem(_e, _fieldName, _fieldContent, _parentElement) {
     function formatElem(_elem, _text, _class) {
         if (_text.length) {
@@ -193,13 +234,18 @@ function createBookDisplayItem(_e, _fieldName, _fieldContent, _parentElement) {
 
     const snakeClassName = _fieldName.toSnakeCase().slice(0, _fieldName.length - 1);
 
+    let validCheck = _fieldContent
+    if (typeof _fieldContent == "object") {
+        validCheck = _fieldContent[0] + _fieldContent[1];
+    }
+
     //Row div
     let rowElem = document.createElement("div");
     rowElem = formatElem(rowElem, "", [
         `id-${_e.id}`, 
         "book-field-row", 
         snakeClassName]);
-    if (!getRowValidity(_fieldName, _fieldContent)) {
+    if (!getRowValidity(_fieldName, validCheck)) {
         rowElem.classList.add("invalid");
     }
 
@@ -216,13 +262,31 @@ function createBookDisplayItem(_e, _fieldName, _fieldContent, _parentElement) {
     rowElem.appendChild(newElem);
 
     newElem = document.createElement("div");
-    newElem = formatElem(newElem, _fieldContent, [
-        `id-${_e.id}`, 
-        "book-field-content", 
-        snakeClassName]);
-    // if (!_fieldIsValid) {
-    //     newElem.style.display = "none";
-    // }
+
+    if (typeof _fieldContent == "object") {
+        newElem = formatElem(newElem, "", [
+            `id-${_e.id}`, 
+            "book-field-content",
+            "author-container"]);
+        for (let i = 0; i < _fieldContent.length; i++) {
+            let authorElem = document.createElement("div");
+            authorElem = formatElem(authorElem, _fieldContent[i], [
+                `id-${_e.id}`, 
+                "book-field-content", 
+                snakeClassName + `${i == 0 ? "-0" : "-1"}`]);
+            
+            if (i == 0 && _fieldContent[0].length) {
+                authorElem.style.marginRight = "0.33em";
+            }
+
+            newElem.appendChild(authorElem);
+        }
+    } else {
+        newElem = formatElem(newElem, _fieldContent, [
+            `id-${_e.id}`, 
+            "book-field-content", 
+            snakeClassName]);
+    }
     rowElem.appendChild(newElem);
 
     // Input fields
@@ -230,7 +294,8 @@ function createBookDisplayItem(_e, _fieldName, _fieldContent, _parentElement) {
         newElem = document.createElement("div");
         newElem = formatElem(newElem, "", [
             `id-${_e.id}`, 
-            "book-field-input",]);
+            "book-field-input",
+            "author"]);
         //newElem.style.display = "grid";
         newElem.style.gridAutoFlow = "column";
 
@@ -277,6 +342,7 @@ function createBookDisplayItem(_e, _fieldName, _fieldContent, _parentElement) {
 
             let newLabel = document.createElement("label");
             newLabel.setAttribute("for", `rating-input-${_e.id}-id-${i}`);
+            newLabel.classList.add(`rating-input-label-${_e.id}`);
             newLabel = formatElem(newLabel, ratingLabel[i], []);
             newElem.appendChild(newLabel);
         }
@@ -331,7 +397,7 @@ function createBookDisplayItem(_e, _fieldName, _fieldContent, _parentElement) {
         let textContent = "";
 
         if (_fieldName == "Title:") {
-            textContent = _fieldContent;
+            //textContent = _fieldContent;
             newElem.setAttribute("value", _fieldContent);
         } else if (_fieldName == "Page count:") {
             newElem.setAttribute("type", "number");

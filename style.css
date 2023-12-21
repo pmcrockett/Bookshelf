@@ -17,7 +17,16 @@
     grid-template-columns: 200px 200px;
 }
 
-.hidden {
+.book-field-input.author {
+    display: grid;
+    grid-template-columns: 50% 50%;
+}
+
+.author-container {
+    display: flex;
+}
+
+.hidden, .book-field-input.author.hidden {
     display: none;
 }
 
