@@ -2,28 +2,39 @@ String.prototype.toSnakeCase = function() {
     return this.toLocaleLowerCase().replace(" ", "-");
 };
 
+const newBookButton = document.querySelector(".new-book");
+const authorAscButton = document.querySelector(".author-asc");
+const authorDescButton = document.querySelector(".author-desc");
+const titleAscButton = document.querySelector(".title-asc");
+const titleDescButton = document.querySelector(".title-desc");
+const ratingAscButton = document.querySelector(".rating-asc");
+const ratingDescButton = document.querySelector(".rating-desc");
+const expandButton = document.querySelector(".expand");
+const collapseButton = document.querySelector(".collapse");
+
 let id = 0;
 const bookshelf = [];
 
 function Book(_title, _authorFirst, _authorLast, _pageCount, _desc, _format, 
         _read, _rating, _dateRead) {
     this.title = _title || "[Untitled]";
-    this.authorFirst = _authorFirst || "";
-    this.authorLast = _authorLast || "";
-    this.pageCount = _pageCount || "";
-    this.desc = _desc || "";
+    this["author-0"] = _authorFirst || "";
+    this["author-1"] = _authorLast || "";
+    this["page-count"] = _pageCount || "";
+    this.description = _desc || "";
     this.format = _format || "N/A";
     this.read = _read || "N/A";
     this.rating = _rating || "N/A";
-    this.dateRead = _dateRead || "";
-    this.id = ++Book.prototype.nextId;
+    this["date-read"] = _dateRead || "";
+    this.id = ++Book.prototype.lastId;
+    this.expand = false;
 }
 
-Book.prototype.nextId = -1;
+Book.prototype.lastId = -1;
 
 Book.prototype.setRead = function(_read, _dateRead) {
     this.read = _read;
-    this.dateRead = _dateRead;
+    this["date-read"] = _dateRead;
 };
 
 Book.prototype.addToBookshelf = function(_bookshelf) {
@@ -41,123 +52,239 @@ newBook.forEach(_e => _e.addToBookshelf(bookshelf));
 
 sortByField(bookshelf, "read", 1);
 
-const bookList = document.querySelector(".book-list");
+const mainDiv = document.querySelector(".main");
+let bookList = document.querySelector(".book-list");
+initBookshelf(bookshelf)
 
-bookshelf.forEach(_e => {
-    let listItem = document.createElement("button");
-    listItem.classList.add(`id-${_e.id}`);
-    listItem.classList.add("book-display");
+function initBookshelf(_bookshelf) {
+    _bookshelf.forEach(_e => {
+        let listItem = document.createElement("button");
+        listItem.classList.add(`id-${_e.id}`);
+        listItem.classList.add("book-display");
 
-    listItem.addEventListener("click", () => {
-        listItem.classList.toggle("active");
-        let content = listItem.nextElementSibling;
-        content.style.display === "grid" ? content.style.display = "none" :
-            content.style.display = "grid";
-        
-        let editButton = document.querySelector(`.id-${_e.id}.edit`);
-        
-        if (editButton.textContent != "Edit") {
-            editButton.dispatchEvent(new Event("click"));
-        }
-    });
+        listItem.addEventListener("click", () => {
+            listItem.classList.toggle("active");
+            let idx = getBookIdxById(_bookshelf, _e.id);
+            let content = listItem.nextElementSibling;
 
-    let combinedAuthor = getCombinedAuthor(_e.authorFirst, _e.authorLast, -1);
-    let node = document.createTextNode(`${_e.title.toString()}` + 
-        `${combinedAuthor.length ? ` (${combinedAuthor})` : ""}`);
-    listItem.appendChild(node);
-    let itemContent = document.createElement("form");
-    itemContent.classList.add(`id-${_e.id}`);
-    itemContent.classList.add("content");
-    createBookDisplayItem(_e, 
-        "Title:", _e.title, itemContent);
-    createBookDisplayItem(_e, 
-        //"Author:", getCombinedAuthor(_e.authorFirst, _e.authorLast, 1), itemContent);
-        "Author:", [_e.authorFirst, _e.authorLast], itemContent);
-    createBookDisplayItem(_e, 
-        "Description:", _e.desc, itemContent);
-    createBookDisplayItem(_e, 
-        "Page count:", _e.pageCount, itemContent);
-    createBookDisplayItem(_e, 
-        "Format:", _e.format, itemContent);
-    createBookDisplayItem(_e, 
-        "Read:", _e.read, itemContent);
-    createBookDisplayItem(_e, 
-        "Date read:", _e.dateRead, itemContent);
-    createBookDisplayItem(_e, 
-        "Rating:", _e.rating, itemContent);
-  
-    itemContent.style.display = "none"
-    bookList.appendChild(listItem);
-    bookList.appendChild(itemContent);
-
-    let buttonDiv = document.createElement("div");
-    buttonDiv.classList.add(`id-${_e.id}`, "button-div");
-    itemContent.appendChild(buttonDiv);
-
-    let editButton = document.createElement("button");
-    editButton.appendChild(document.createTextNode("Edit"));
-    //editButton.style.display = "inline";
-    editButton.classList.add(`id-${_e.id}`, "edit", "modifier");
-
-    editButton.addEventListener("click", _event => {
-        _event.preventDefault();
-        const fieldContent = document.getElementsByClassName(`id-${_e.id} book-field-content`);
-        const fieldInput = document.getElementsByClassName(`id-${_e.id} book-field-input`);
-
-        if (!fieldContent[0].classList.contains("hidden")) {
-            for (let item of fieldContent) {
-                item.parentElement.classList.remove("invalid");
-                item.classList.add("hidden");
+            if (content.style.display === "grid") {
+                content.style.display = "none";
+                _bookshelf[idx].expand = false;
+            } else {
+                content.style.display = "grid";
+                _bookshelf[idx].expand = true;
             }
-            for (let item of fieldInput) {
-                item.classList.remove("hidden");
-            }
+            
+            autoSubmit(_e.id)
+        });
 
-            resetForm(_e.id);
-            editButton.textContent = "Done";
-        } else {
-            // Submit form
-            const formHtml = document.querySelector(`.id-${_e.id}.content`);
-            const form = new FormData(formHtml);
-
-            applyInput(form, _e.id, "title");
-            applyInput(form, _e.id, "author");
-            applyInput(form, _e.id, "description");
-            applyInput(form, _e.id, "page-count");
-            applyInput(form, _e.id, "format");
-            applyInput(form, _e.id, "read");
-            applyInput(form, _e.id, "date-read");
-            applyInput(form, _e.id, "rating");
-
-            for (let item of fieldContent) {
-                item.classList.remove("hidden");
-            }
-            for (let item of fieldInput) {
-                item.classList.add("hidden");
-            }
-
-            let bookButton = document.querySelector(`.id-${_e.id}.book-display`);
-            let title = document.querySelector(`.id-${_e.id}.book-field-content.title`).textContent;
-            let authorFirst = form.get(`author-0-input-${_e.id}`);
-            let authorLast = form.get(`author-1-input-${_e.id}`);
-            let combinedAuthor = getCombinedAuthor(authorFirst, authorLast, -1);
-            bookButton.textContent = title +
-                `${combinedAuthor.length ? ` (${combinedAuthor})` : ""}`
-
-            editButton.textContent = "Edit";
-        }
-    });
+        let combinedAuthor = getCombinedAuthor(_e["author-0"], _e["author-1"], -1);
+        let node = document.createTextNode(`${_e.title.toString()}` + 
+            `${combinedAuthor.length ? ` (${combinedAuthor})` : ""}`);
+        listItem.appendChild(node);
+        let itemContent = document.createElement("form");
+        itemContent.classList.add(`id-${_e.id}`);
+        itemContent.classList.add("content");
+        createBookDisplayItem(_e, 
+            "Title:", _e.title, itemContent);
+        createBookDisplayItem(_e, 
+            //"Author:", getCombinedAuthor(_e["author-0"], _e["author-1"], 1), itemContent);
+            "Author:", [_e["author-0"], _e["author-1"]], itemContent);
+        createBookDisplayItem(_e, 
+            "Description:", _e.description, itemContent);
+        createBookDisplayItem(_e, 
+            "Page count:", _e["page-count"], itemContent);
+        createBookDisplayItem(_e, 
+            "Format:", _e.format, itemContent);
+        createBookDisplayItem(_e, 
+            "Read:", _e.read, itemContent);
+        createBookDisplayItem(_e, 
+            "Date read:", _e["date-read"], itemContent);
+        createBookDisplayItem(_e, 
+            "Rating:", _e.rating, itemContent);
     
-    buttonDiv.appendChild(editButton);
+        itemContent.style.display = "none"
+        bookList.appendChild(listItem);
+        bookList.appendChild(itemContent);
 
-    let deleteButton = document.createElement("button");
-    deleteButton.appendChild(document.createTextNode("Delete"));
-    //deleteButton.style.display = "inline";
-    deleteButton.classList.add(`id-${_e.id}`, "delete", "modifier");
+        let buttonDiv = document.createElement("div");
+        buttonDiv.classList.add(`id-${_e.id}`, "button-div");
+        itemContent.appendChild(buttonDiv);
 
-    buttonDiv.appendChild(deleteButton);
+        let editButton = document.createElement("button");
+        editButton.appendChild(document.createTextNode("Edit"));
+        editButton.classList.add(`id-${_e.id}`, "edit", "modifier");
 
+        editButton.addEventListener("click", _event => {
+            _event.preventDefault();
+            const fieldContent = document.getElementsByClassName(`id-${_e.id} book-field-content`);
+            const fieldInput = document.getElementsByClassName(`id-${_e.id} book-field-input`);
+
+            if (!fieldContent[0].classList.contains("hidden")) {
+                for (let item of fieldContent) {
+                    item.parentElement.classList.remove("invalid");
+                    item.classList.add("hidden");
+                }
+                for (let item of fieldInput) {
+                    item.classList.remove("hidden");
+                }
+
+                resetForm(_e.id);
+                editButton.textContent = "Done";
+            } else {
+                // Submit form
+                const formHtml = document.querySelector(`.id-${_e.id}.content`);
+                const form = new FormData(formHtml);
+
+                applyInput(form, _e.id, "title");
+                applyInput(form, _e.id, "author");
+                applyInput(form, _e.id, "description");
+                applyInput(form, _e.id, "page-count");
+                applyInput(form, _e.id, "format");
+                applyInput(form, _e.id, "read");
+                applyInput(form, _e.id, "date-read");
+                applyInput(form, _e.id, "rating");
+
+                for (let item of fieldContent) {
+                    item.classList.remove("hidden");
+                }
+                for (let item of fieldInput) {
+                    item.classList.add("hidden");
+                }
+
+                let bookButton = document.querySelector(`.id-${_e.id}.book-display`);
+                let title = document.querySelector(`.id-${_e.id}.book-field-content.title`).textContent;
+                let authorFirst = form.get(`author-0-input-${_e.id}`);
+                let authorLast = form.get(`author-1-input-${_e.id}`);
+                let combinedAuthor = getCombinedAuthor(authorFirst, authorLast, -1);
+                bookButton.textContent = title +
+                    `${combinedAuthor.length ? ` (${combinedAuthor})` : ""}`
+
+                editButton.textContent = "Edit";
+            }
+        });
+        
+        buttonDiv.appendChild(editButton);
+
+        let deleteButton = document.createElement("button");
+        deleteButton.appendChild(document.createTextNode("Delete"));
+        deleteButton.classList.add(`id-${_e.id}`, "delete", "modifier");
+
+        deleteButton.addEventListener("click", _event => {
+            _event.preventDefault();
+            let bookDisplay = document.querySelector(`.id-${_e.id}.book-display`);
+            let content = document.querySelector(`.id-${_e.id}.content`);
+            bookDisplay.remove();
+            content.remove();
+            let idx = getBookIdxById(_bookshelf, _e.id);
+            _bookshelf.splice(idx, 1);
+        });
+
+        itemContent.appendChild(deleteButton);
+    });
+}
+
+function autoSubmit(_id) {
+    let editButton = document.querySelector(`.id-${_id}.edit`);
+            
+    if (editButton && editButton.textContent != "Edit") {
+        editButton.dispatchEvent(new Event("click"));
+    }
+}
+
+function reinitBookshelf(_bookshelf) {
+    _bookshelf.forEach(_e =>  {
+        autoSubmit(_e.id);
+    });
+
+    bookList.remove();
+    bookList = document.createElement("div");
+    bookList.classList.add("book-list");
+    mainDiv.appendChild(bookList);
+    initBookshelf(_bookshelf);
+
+    _bookshelf.forEach(_e =>  {
+        if (_e.expand) {
+            let bookDisplay = 
+                document.querySelector(`.id-${_e.id}.book-display`)
+            bookDisplay.dispatchEvent(new Event("click"));
+        }
+    });
+}
+
+function getBookIdxById(_bookshelf, _id) {
+    for (let i = 0; i < _bookshelf.length; i++) {
+        if (_bookshelf[i].id == _id) return i;
+    }
+
+    return -1;
+}
+
+newBookButton.addEventListener("click", _event => {
+    bookshelf.splice(0, 0, new Book());
+    reinitBookshelf(bookshelf);
+    let bookDisplay = document.querySelector(`.id-${Book.prototype.lastId}.book-display`);
+    let bookEdit = document.querySelector(`.id-${Book.prototype.lastId}.edit`);
+    bookDisplay.dispatchEvent(new Event("click"));
+    bookEdit.dispatchEvent(new Event("click"));
 });
+
+authorAscButton.addEventListener("click", _event => {
+    sortBookshelf(bookshelf, "title", 1);
+    sortBookshelf(bookshelf, "author-1", 1);
+});
+
+authorDescButton.addEventListener("click", _event => {
+    sortBookshelf(bookshelf, "title", 1);
+    sortBookshelf(bookshelf, "author-1", -1);
+});
+
+titleAscButton.addEventListener("click", _event => {
+    sortBookshelf(bookshelf, "author-1", 1);
+    sortBookshelf(bookshelf, "title", 1);
+});
+
+titleDescButton.addEventListener("click", _event => {
+    sortBookshelf(bookshelf, "author-1", 1);
+    sortBookshelf(bookshelf, "title", -1);
+});
+
+ratingAscButton.addEventListener("click", _event => {
+    sortBookshelf(bookshelf, "title", 1);
+    sortBookshelf(bookshelf, "author-1", 1);
+    sortBookshelf(bookshelf, "rating", 1);
+});
+
+ratingDescButton.addEventListener("click", _event => {
+    sortBookshelf(bookshelf, "title", 1);
+    sortBookshelf(bookshelf, "author-1", 1);
+    sortBookshelf(bookshelf, "rating", -1);
+});
+
+expandButton.addEventListener("click", _event => {
+    bookshelf.forEach(_e =>  {
+        if (!_e.expand) {
+            let bookDisplay = 
+                document.querySelector(`.id-${_e.id}.book-display`)
+            bookDisplay.dispatchEvent(new Event("click"));
+        }
+    });
+});
+
+collapseButton.addEventListener("click", _event => {
+    bookshelf.forEach(_e =>  {
+        if (_e.expand) {
+            let bookDisplay = 
+                document.querySelector(`.id-${_e.id}.book-display`)
+            bookDisplay.dispatchEvent(new Event("click"));
+        }
+    });
+});
+
+function sortBookshelf(_bookshelf, _field, _dir) {
+    sortByField(_bookshelf, _field, _dir);
+    reinitBookshelf(_bookshelf);
+}
 
 function applyInput(_formDat, _id, _snakeClassName) {
     let text = "";
@@ -179,6 +306,13 @@ function applyInput(_formDat, _id, _snakeClassName) {
         } else {
             firstContent.style.marginRight = "0px";
         }
+
+        bookshelf.forEach(_e => {
+            if (_e.id == _id) {
+                _e[_snakeClassName + "-0"] = first;
+                _e[_snakeClassName + "-1"] = last;
+            }
+        });
     } else {
         text = _formDat.get(`${_snakeClassName}-input-${_id}`);
 
@@ -197,6 +331,12 @@ function applyInput(_formDat, _id, _snakeClassName) {
 
         document.querySelector(`.id-${_id}.book-field-content.${_snakeClassName}`)
             .textContent = text;
+        
+        bookshelf.forEach(_e => {
+            if (_e.id == _id) {
+                _e[_snakeClassName] = text;
+            }
+        });
     }
     
 
@@ -338,8 +478,8 @@ function createBookDisplayItem(_e, _fieldName, _fieldContent, _parentElement) {
                 `id-${_e.id}`, 
                 "book-field-input", 
                 snakeClassName + "-" + i]);
-            authorElem.setAttribute("value", i == 0 ? _e.authorFirst : _e.authorLast);
-            //authorElem.appendChild(document.createTextNode(i == 0 ? _e.authorFirst : _e.authorLast));
+            authorElem.setAttribute("value", i == 0 ? _e["author-0"] : _e["author-1"]);
+            //authorElem.appendChild(document.createTextNode(i == 0 ? _e["author-0"] : _e["author-1"]));
             authorElem.setAttribute("name", `author-${i}-input-${_e.id}`);
             //authorElem.classList.add("hidden");
             newElem.appendChild(authorElem);
@@ -475,6 +615,11 @@ function sortByField(_bookshelf, _field, _dir) {
     _bookshelf.sort((_a, _b) => {
         let val1 = _a[_field];
         let val2 = _b[_field];
+
+        if (_field == "rating" || _field == "read" || _field == "format") {
+            if (val1 == "N/A") val1 = "";
+            if (val2 == "N/A") val2 = "";
+        }
 
         if (typeof val1 === "string") {
             val1 = val1.toLocaleLowerCase();
