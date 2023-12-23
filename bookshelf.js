@@ -74,9 +74,9 @@ bookshelf.forEach(_e => {
         //"Author:", getCombinedAuthor(_e.authorFirst, _e.authorLast, 1), itemContent);
         "Author:", [_e.authorFirst, _e.authorLast], itemContent);
     createBookDisplayItem(_e, 
-        "Page count:", _e.pageCount, itemContent);
-    createBookDisplayItem(_e, 
         "Description:", _e.desc, itemContent);
+    createBookDisplayItem(_e, 
+        "Page count:", _e.pageCount, itemContent);
     createBookDisplayItem(_e, 
         "Format:", _e.format, itemContent);
     createBookDisplayItem(_e, 
@@ -90,10 +90,14 @@ bookshelf.forEach(_e => {
     bookList.appendChild(listItem);
     bookList.appendChild(itemContent);
 
+    let buttonDiv = document.createElement("div");
+    buttonDiv.classList.add(`id-${_e.id}`, "button-div");
+    itemContent.appendChild(buttonDiv);
+
     let editButton = document.createElement("button");
     editButton.appendChild(document.createTextNode("Edit"));
-    editButton.style.display = "inline";
-    editButton.classList.add(`id-${_e.id}`, "edit");
+    //editButton.style.display = "inline";
+    editButton.classList.add(`id-${_e.id}`, "edit", "modifier");
 
     editButton.addEventListener("click", _event => {
         _event.preventDefault();
@@ -118,8 +122,8 @@ bookshelf.forEach(_e => {
 
             applyInput(form, _e.id, "title");
             applyInput(form, _e.id, "author");
-            applyInput(form, _e.id, "page-count");
             applyInput(form, _e.id, "description");
+            applyInput(form, _e.id, "page-count");
             applyInput(form, _e.id, "format");
             applyInput(form, _e.id, "read");
             applyInput(form, _e.id, "date-read");
@@ -143,8 +147,15 @@ bookshelf.forEach(_e => {
             editButton.textContent = "Edit";
         }
     });
+    
+    buttonDiv.appendChild(editButton);
 
-    itemContent.appendChild(editButton);
+    let deleteButton = document.createElement("button");
+    deleteButton.appendChild(document.createTextNode("Delete"));
+    //deleteButton.style.display = "inline";
+    deleteButton.classList.add(`id-${_e.id}`, "delete", "modifier");
+
+    buttonDiv.appendChild(deleteButton);
 
 });
 
@@ -164,7 +175,7 @@ function applyInput(_formDat, _id, _snakeClassName) {
             let rowToHide = document.querySelector(`.id-${_id}.book-field-row.${_snakeClassName}`);
             rowToHide.classList.add("invalid");
         } else if (first.length) {
-            firstContent.style.marginRight = "0.33em";
+            firstContent.style.marginRight = "0.5ch";
         } else {
             firstContent.style.marginRight = "0px";
         }
@@ -298,7 +309,7 @@ function createBookDisplayItem(_e, _fieldName, _fieldContent, _parentElement) {
                 snakeClassName + `${i == 0 ? "-0" : "-1"}`]);
             
             if (i == 0 && _fieldContent[0].length) {
-                authorElem.style.marginRight = "0.33em";
+                authorElem.style.marginRight = "0.5ch";
             }
 
             newElem.appendChild(authorElem);

@@ -4,39 +4,123 @@
 
 :root {
     --row-height: 24px;
+    --bg-col: black;
+    --book-button-col: white;
+    --book-button-border-col: rgb(201, 201, 201);
+    --main-bg-col: rgb(0, 0, 0);
+    --book-entry-bg-col: black;
+    --text-col: white;
+
+    --info-w: 100px;
+    --details-w: 500px;
+    --input-w: 498px;
+    --full-w: 600px;
+
+    background-color: var(--bg-col);
+    font-size: medium;
+    color: var(--text-col);
+}
+
+.bg-container {
+    height: 100%;
+    width: 100%;
+    display: grid;
+    grid-template-rows: 100%;
+    grid-template-columns: 100%;
+    align-items: start;
+    justify-items: center;
+}
+
+.main {
+    background-color: var(--main-bg-col);
+    max-width: var(--full-w);
+    width: auto;
+    height: min-content;
+    display: grid;
+    grid-template-columns: auto;
+    grid-template-rows: auto auto;
 }
 
 .book-list {
+    width: max-content;
     display: grid;
+    align-content: start;
+    grid-template-columns: clamp(200px, 80vw, 800px);
 }
 
 .book-display {
+    background-color: var(--book-button-col);
+    border-color: var(--book-button-border-col);
     text-align: left;
+    max-width: var(--full-w);
+    border-width: 3px;
+    border-radius: 12px;
 }
 
 .content {
+    max-width: var(--full-w);
+    width: 100%;
+    background-color: var(--book-entry-bg-col);
     display: grid;
-    grid-template-columns: auto;
+    grid-template-columns: 100%;
     grid-auto-rows: minmax(var(--row-height), auto);
     gap: 4px;
 }
 
-input {
-    height: calc(var(--row-height - 6));
+input, textarea, fieldset {
+    /*max-width: var(--details-w);*/
+    max-width: var(--input-w);
+    width: auto;
+    border-width: 1px;
+    padding: 0px;
+    height: 1.1rem;
 }
 
-button.edit {
+textarea {
+    resize: vertical;
+}
+
+select.book-field-input {
+    width: max-content;
+    border-width: 1px;
+    padding: 0px;
+}
+
+.book-field-input.page-count {
+    width: 50px;
+}
+
+input.book-field-input.date-read {
+    width: auto;
+    max-width: max-content;
+}
+
+fieldset.book-field-input {
+    max-width: max-content;
+}
+
+button.modifier {
     width: 48px;
+    background-color: var(--book-entry-bg-col);
+    color: var(--text-col);
+    /*border: none;*/
+    text-align: left;
+    padding: 0px;
 }
 
 .book-field-row {
     display: grid;
-    grid-template-columns: 100px 250px;
+    grid-template-columns: var(--info-w) calc(100% - var(--info-w));
+}
+
+input.author-0, input.author-1 {
+    max-width: calc(calc(var(--input-w) / 2) - 1px);
+    width: 100%;
 }
 
 .book-field-input.author {
-    display: grid;
-    grid-template-columns: 50% 50%;
+    display: flex;
+    flex-wrap: wrap;
 }
 
 .author-container {
