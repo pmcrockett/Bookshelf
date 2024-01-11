@@ -1,23 +1,34 @@
+@font-face {
+    font-family: CarroisGothic-Reg;
+    src: url(./resources/CarroisGothic-Regular.ttf);
+  }
+
 * {
     margin: 0px;
+    font-family: CarroisGothic-Reg, Arial, Helvetica, sans-serif;
 }
 
 :root {
     --row-height: 24px;
-    --bg-col: black;
-    --book-button-col: white;
-    --book-button-border-col: rgb(201, 201, 201);
-    --main-bg-col: rgb(0, 0, 0);
-    --book-entry-bg-col: black;
-    --text-col: white;
-    --sidebar-col: gray;
+    --bg-col: rgb(12, 33, 71);
+    --book-button-col: rgb(212, 212, 212);
+    --main-bg-col: rgba(0, 0, 0, 0);
+    --book-entry-bg-col: rgba(0, 0, 0, 0);
+    --text-col: rgb(212, 212, 212);
+    --dark-text-col: rgb(12, 33, 71);
+    --sidebar-col: rgba(0, 0, 0, 0);
+    --side-button-col: rgb(212, 212, 212);
+    --hover-button-col: rgb(145, 151, 187);
+    --hover-button-border-col: rgb(48, 73, 102);
+    --active-button-col: rgb(94, 112, 219);
 
+    --content-gap: 8px;
     --info-w: 100px;
     --details-w: 500px;
     --input-w: 498px;
     --full-w: 600px;
-    --sidebar-w: 100px;
-    --header-h: 60px;
+    --sidebar-w: 63px;
+    --header-h: 64px;
 
     background-color: var(--bg-col);
     font-size: medium;
@@ -42,6 +53,7 @@
     display: grid;
     grid-template-columns: var(--sidebar-w) auto;
     grid-template-rows: var(--header-h) auto;
+    justify-items: center;
 }
 
 .book-list {
@@ -53,35 +65,58 @@
 }
 
 .book-display {
+    display: grid;
+    grid-template-columns: auto auto;
+    justify-content: start;
+    align-items: center;
+    gap: 8px;
+    color: var(--dark-text-col);
     background-color: var(--book-button-col);
-    border-color: var(--book-button-border-col);
-    text-align: left;
     max-width: var(--full-w);
-    border-width: 3px;
-    border-radius: 12px;
+    /*border-width: 3px;*/
+    border-width: 0px;
+    border-radius: 0px 15px 15px 0px;
+    margin-bottom: 1px;
+}
+
+.book-display > svg {
+    height: 24px;
+    width: 24px;
 }
 
 .content {
+    margin-top: var(--content-gap);
     max-width: var(--full-w);
     width: 100%;
     background-color: var(--book-entry-bg-col);
     display: grid;
     grid-template-columns: 100%;
-    grid-auto-rows: minmax(var(--row-height), auto);
-    gap: 4px;
+    /*grid-auto-rows: minmax(var(--row-height), auto);*/
+    /*grid-auto-rows: minmax(var(--row-height), auto);*/
+    gap: var(--content-gap);
 }
 
 input, textarea, fieldset {
-    /*max-width: var(--details-w);*/
     max-width: var(--input-w);
     width: auto;
-    border-width: 1px;
+    border-width: 0px;
     padding: 0px;
+    margin-right: 2px;
     height: 1.1rem;
+}
+
+fieldset {
+    display: grid;
+}
+
+fieldset.book-field-input > label {
+    margin-right: 8px;
+    margin-left: 2px;
 }
 
 textarea {
     resize: vertical;
+    min-height: 64px;
 }
 
 select.book-field-input {
@@ -104,12 +139,41 @@ fieldset.book-field-input {
 }
 
 button.modifier {
-    width: 48px;
-    background-color: var(--book-entry-bg-col);
-    color: var(--text-col);
-    /*border: none;*/
-    text-align: left;
+    width: var(--row-height);
+    height: var(--row-height);
+}
+
+.button-div {
+    display: grid;
+    gap: 8px;
+    grid-template-columns: auto auto;
+    grid-template-rows: 0px;
+    justify-content: end;
+    position: relative;
+    top: calc(calc(var(--row-height) * -1) - var(--content-gap));
+}
+
+.svg-button {
+    color: var(--side-button-col);
+    background-color: #00000000;
+    border: none;
     padding: 0px;
+}
+
+button.svg-button:hover > svg > path {
+    fill: var(--hover-button-col);
+}
+
+button.svg-button:hover {
+    color: var(--hover-button-col);
+}
+
+button.svg-button:active > svg > path {
+    fill: var(--active-button-col);
+}
+
+button.svg-button:active {
+    color: var(--active-button-col);
 }
 
 .book-field-row {
@@ -143,12 +207,39 @@ input.author-0, input.author-1 {
     grid-area: 1 / 2 / 2 / 3;
     width: auto;
     align-self: center;
+    justify-self: start;
  }
 
 .sidebar {
-    grid-area: 1 / 1 / 3 / 2;
+    grid-area: 2 / 1 / 3 / 2;
     height: calc(100vh - 32px);
     background-color: var(--sidebar-col);
     position: sticky;
     top: 0;
+    display: grid;
+    align-content: start;
+    grid-auto-flow: row;
+    grid-auto-rows: auto;
+}
+
+.side-button {
+    height: auto;
+    width: 48px;
+}
+
+button:hover:not(.svg-button) {
+    background-color: var(--hover-button-col);
+    border-color: var(--hover-button-border-col);
+}
+
+button:active:not(.svg-button) {
+    background-color: var(--active-button-col);
+}
+
+button:hover {
+    cursor: pointer;
+}
+
+.side-spacer {
+    height: 32px;
 }

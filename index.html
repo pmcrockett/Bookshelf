@@ -14,15 +14,44 @@
                 <h1>Bookshelf</h1>
             </div>
             <div class="sidebar">
-                <button class="new-book">Add new book</button>
-                <button class="sort author-asc">Sort by author (ascending)</button>
-                <button class="sort author-desc">Sort by author (descending)</button>
-                <button class="sort title-asc">Sort by title (ascending)</button>
-                <button class="sort title-desc">Sort by title (descending)</button>
-                <button class="sort rating-asc">Sort by rating (ascending)</button>
-                <button class="sort rating-desc">Sort by rating (descending)</button>
-                <button class="expand">Expand all</button>
-                <button class="collapse">Collapse all</button>
+                <button class="side-button new-book svg-button">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" style="fill:var(--side-button-col)"><title>Add book</title><path d="M17,13H13V17H11V13H7V11H11V7H13V11H17M12,2A10,10 0 0,0 2,12A10,10 0 0,0 12,22A10,10 0 0,0 22,12A10,10 0 0,0 12,2Z" /></svg>
+                    Add book
+                </button>
+                <div class="side-spacer"></div>
+                <button class="side-button sort author-asc svg-button">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" style="fill:var(--side-button-col)"><title>Sort by author (ascending)</title><path d="M19 17H22L18 21L14 17H17V3H19M11 13V15L7.67 19H11V21H5V19L8.33 15H5V13M9 3H7C5.9 3 5 3.9 5 5V11H7V9H9V11H11V5C11 3.9 10.11 3 9 3M9 7H7V5H9Z" /></svg>
+                    Sort by author
+                </button>
+                <button class="side-button sort author-desc svg-button">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" style="fill:var(--side-button-col)"><title>Sort by author (descending)</title><path d="M19 7H22L18 3L14 7H17V21H19M11 13V15L7.67 19H11V21H5V19L8.33 15H5V13M9 3H7C5.9 3 5 3.9 5 5V11H7V9H9V11H11V5C11 3.9 10.11 3 9 3M9 7H7V5H9Z" /></svg>
+                    Sort by author
+                </button>
+                <button class="side-button sort title-asc svg-button">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" style="fill:var(--side-button-col)"><title>Sort by title (ascending)</title><path d="M19 17H22L18 21L14 17H17V3H19M11 13V15L7.67 19H11V21H5V19L8.33 15H5V13M9 3H7C5.9 3 5 3.9 5 5V11H7V9H9V11H11V5C11 3.9 10.11 3 9 3M9 7H7V5H9Z" /></svg>
+                    Sort by title
+                </button>
+                <button class="side-button sort title-desc svg-button">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" style="fill:var(--side-button-col)"><title>Sort by title (descending)</title><path d="M19 7H22L18 3L14 7H17V21H19M11 13V15L7.67 19H11V21H5V19L8.33 15H5V13M9 3H7C5.9 3 5 3.9 5 5V11H7V9H9V11H11V5C11 3.9 10.11 3 9 3M9 7H7V5H9Z" /></svg>
+                    Sort by title
+                </button>
+                <button class="side-button sort rating-asc svg-button">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" style="fill:var(--side-button-col)"><title>Sort by rating (ascending)</title><path d="M19 17H22L18 21L14 17H17V3H19M2 17H12V19H2M6 5V7H2V5M2 11H9V13H2V11Z" /></svg>
+                    Sort by rating
+                </button>
+                <button class="side-button sort rating-desc svg-button">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" style="fill:var(--side-button-col)"><title>Sort by rating (descending)</title><path d="M19 7H22L18 3L14 7H17V21H19M2 17H12V19H2M6 5V7H2V5M2 11H9V13H2V11Z" /></svg>
+                    Sort by rating
+                </button>
+                <div class="side-spacer"></div>
+                <button class="side-button expand svg-button">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" style="fill:var(--side-button-col)"><title>Expand all</title><path d="M12,18.17L8.83,15L7.42,16.41L12,21L16.59,16.41L15.17,15M12,5.83L15.17,9L16.58,7.59L12,3L7.41,7.59L8.83,9L12,5.83Z" /></svg>
+                    Expand all
+                </button>
+                <button class="side-button collapse svg-button">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" style="fill:var(--side-button-col)"><title>Collapse all</title><path d="M16.59,5.41L15.17,4L12,7.17L8.83,4L7.41,5.41L12,10M7.41,18.59L8.83,20L12,16.83L15.17,20L16.58,18.59L12,14L7.41,18.59Z" /></svg>
+                    Collapse all
+                </button>
             </div>
             <div class="book-list"></div>
         </div>

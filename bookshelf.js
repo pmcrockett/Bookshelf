@@ -62,20 +62,28 @@ function initBookshelf(_bookshelf) {
         listItem.classList.add(`id-${_e.id}`);
         listItem.classList.add("book-display");
 
+        let rightArrowSvg = "M2,12A10,10 0 0,1 12,2A10,10 0 0,1 22,12A10,10 0 0,1 12,22A10,10 0 0,1 2,12M10,17L15,12L10,7V17Z";
+        let downArrowSvg = "M12,2A10,10 0 0,1 22,12A10,10 0 0,1 12,22A10,10 0 0,1 2,12A10,10 0 0,1 12,2M7,10L12,15L17,10H7Z"
+        listItem = appendSvg(listItem, "var(--dark-text-col)", rightArrowSvg);
+        
         listItem.addEventListener("click", () => {
             listItem.classList.toggle("active");
             let idx = getBookIdxById(_bookshelf, _e.id);
             let content = listItem.nextElementSibling;
 
+            autoSubmit(_e.id)
+
             if (content.style.display === "grid") {
                 content.style.display = "none";
                 _bookshelf[idx].expand = false;
+                let pathElem = document.querySelector(`button.id-${_e.id}.book-display > svg > path`);
+                pathElem.setAttribute("d", rightArrowSvg);
             } else {
                 content.style.display = "grid";
                 _bookshelf[idx].expand = true;
+                let pathElem = document.querySelector(`button.id-${_e.id}.book-display > svg > path`);
+                pathElem.setAttribute("d", downArrowSvg);
             }
-            
-            autoSubmit(_e.id)
         });
 
         let combinedAuthor = getCombinedAuthor(_e["author-0"], _e["author-1"], -1);
@@ -88,7 +96,6 @@ function initBookshelf(_bookshelf) {
         createBookDisplayItem(_e, 
             "Title:", _e.title, itemContent);
         createBookDisplayItem(_e, 
-            //"Author:", getCombinedAuthor(_e["author-0"], _e["author-1"], 1), itemContent);
             "Author:", [_e["author-0"], _e["author-1"]], itemContent);
         createBookDisplayItem(_e, 
             "Description:", _e.description, itemContent);
@@ -108,13 +115,16 @@ function initBookshelf(_bookshelf) {
         bookList.appendChild(itemContent);
 
         let buttonDiv = document.createElement("div");
+
         buttonDiv.classList.add(`id-${_e.id}`, "button-div");
         itemContent.appendChild(buttonDiv);
 
         let editButton = document.createElement("button");
-        editButton.appendChild(document.createTextNode("Edit"));
-        editButton.classList.add(`id-${_e.id}`, "edit", "modifier");
+        let editSvg = "M12,2C6.47,2 2,6.47 2,12C2,17.53 6.47,22 12,22C17.53,22 22,17.53 22,12C22,6.47 17.53,2 12,2M15.1,7.07C15.24,7.07 15.38,7.12 15.5,7.23L16.77,8.5C17,8.72 17,9.07 16.77,9.28L15.77,10.28L13.72,8.23L14.72,7.23C14.82,7.12 14.96,7.07 15.1,7.07M13.13,8.81L15.19,10.87L9.13,16.93H7.07V14.87L13.13,8.81Z";
+        editButton = appendSvg(editButton, "var(--side-button-col)", editSvg);
+        editButton.classList.add("svg-button");
 
+        editButton.classList.add(`id-${_e.id}`, "edit", "modifier");
         editButton.addEventListener("click", _event => {
             _event.preventDefault();
             const fieldContent = document.getElementsByClassName(`id-${_e.id} book-field-content`);
@@ -130,7 +140,9 @@ function initBookshelf(_bookshelf) {
                 }
 
                 resetForm(_e.id);
-                editButton.textContent = "Done";
+                editButton.classList.add("is-editing");
+                let pathElem = document.querySelector(`button.id-${_e.id}.edit > svg > path`);
+                pathElem.setAttribute("d", "M12 2C6.5 2 2 6.5 2 12S6.5 22 12 22 22 17.5 22 12 17.5 2 12 2M10 17L5 12L6.41 10.59L10 14.17L17.59 6.58L19 8L10 17Z");
             } else {
                 // Submit form
                 const formHtml = document.querySelector(`.id-${_e.id}.content`);
@@ -157,18 +169,25 @@ function initBookshelf(_bookshelf) {
                 let authorFirst = form.get(`author-0-input-${_e.id}`);
                 let authorLast = form.get(`author-1-input-${_e.id}`);
                 let combinedAuthor = getCombinedAuthor(authorFirst, authorLast, -1);
-                bookButton.textContent = title +
-                    `${combinedAuthor.length ? ` (${combinedAuthor})` : ""}`
+                bookButton.textContent = "";
+                bookButton = appendSvg(bookButton, "var(--dark-text-col)", downArrowSvg);
+                node = document.createTextNode(title + 
+                    `${combinedAuthor.length ? ` (${combinedAuthor})` : ""}`);
+                bookButton.appendChild(node);
 
-                editButton.textContent = "Edit";
+                editButton.classList.remove("is-editing");
+                let pathElem = document.querySelector(`button.id-${_e.id}.edit > svg > path`);
+                pathElem.setAttribute("d", editSvg);
             }
         });
         
         buttonDiv.appendChild(editButton);
 
         let deleteButton = document.createElement("button");
-        deleteButton.appendChild(document.createTextNode("Delete"));
         deleteButton.classList.add(`id-${_e.id}`, "delete", "modifier");
+        deleteButton = appendSvg(deleteButton, "var(--side-button-col)",
+            "M12,2C17.53,2 22,6.47 22,12C22,17.53 17.53,22 12,22C6.47,22 2,17.53 2,12C2,6.47 6.47,2 12,2M17,7H14.5L13.5,6H10.5L9.5,7H7V9H17V7M9,18H15A1,1 0 0,0 16,17V10H8V17A1,1 0 0,0 9,18Z");
+        deleteButton.classList.add("svg-button");
 
         deleteButton.addEventListener("click", _event => {
             _event.preventDefault();
@@ -180,14 +199,29 @@ function initBookshelf(_bookshelf) {
             _bookshelf.splice(idx, 1);
         });
 
-        itemContent.appendChild(deleteButton);
+        buttonDiv.appendChild(deleteButton);
     });
+}
+
+function appendSvg(_elem, _col, _path) {
+    let editSvg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+    editSvg.setAttribute("viewBox", "0 0 24 24");
+    editSvg.setAttribute("style", "fill:" + _col);
+    let editTitle = document.createElement("title");
+    editTitle.textContent = "svg-img";
+    editSvg.appendChild(editTitle);
+    let editPath = document.createElementNS("http://www.w3.org/2000/svg", "path");
+    editPath.setAttribute("d", _path);
+    editSvg.appendChild(editPath);
+    _elem.appendChild(editSvg);
+
+    return _elem;
 }
 
 function autoSubmit(_id) {
     let editButton = document.querySelector(`.id-${_id}.edit`);
-            
-    if (editButton && editButton.textContent != "Edit") {
+    
+    if (editButton && editButton.classList.contains("is-editing")) {
         editButton.dispatchEvent(new Event("click"));
     }
 }
@@ -221,6 +255,7 @@ function getBookIdxById(_bookshelf, _id) {
 }
 
 newBookButton.addEventListener("click", _event => {
+    window.scrollTo(0, 0);
     bookshelf.splice(0, 0, new Book());
     reinitBookshelf(bookshelf);
     let bookDisplay = document.querySelector(`.id-${Book.prototype.lastId}.book-display`);
@@ -429,9 +464,6 @@ function createBookDisplayItem(_e, _fieldName, _fieldContent, _parentElement) {
         `id-${_e.id}`, 
         "book-field-name", 
         snakeClassName]);
-    //if (!_fieldIsValid) {
-    //    newElem.style.display = "none";
-    //}
     rowElem.appendChild(newElem);
 
     newElem = document.createElement("div");
@@ -469,7 +501,6 @@ function createBookDisplayItem(_e, _fieldName, _fieldContent, _parentElement) {
             `id-${_e.id}`, 
             "book-field-input",
             "author"]);
-        //newElem.style.display = "grid";
         newElem.style.gridAutoFlow = "column";
 
         for (let i = 0; i < 2; i++) {
@@ -479,9 +510,7 @@ function createBookDisplayItem(_e, _fieldName, _fieldContent, _parentElement) {
                 "book-field-input", 
                 snakeClassName + "-" + i]);
             authorElem.setAttribute("value", i == 0 ? _e["author-0"] : _e["author-1"]);
-            //authorElem.appendChild(document.createTextNode(i == 0 ? _e["author-0"] : _e["author-1"]));
             authorElem.setAttribute("name", `author-${i}-input-${_e.id}`);
-            //authorElem.classList.add("hidden");
             newElem.appendChild(authorElem);
         }
 
@@ -491,7 +520,6 @@ function createBookDisplayItem(_e, _fieldName, _fieldContent, _parentElement) {
         newElem = formatElem(newElem, "", [
             `id-${_e.id}`, 
             "book-field-input",]);
-        //newElem.style.display = "grid";
         newElem.style.gridAutoFlow = "column";
         const ratingLabel = ["N/A", "1", "2", "3", "4", "5"]
         const ratingVal = ["N/A", "1/5", "2/5", "3/5", "4/5", "5/5"]
@@ -510,7 +538,7 @@ function createBookDisplayItem(_e, _fieldName, _fieldContent, _parentElement) {
             if (_fieldContent == ratingVal[i]) {
                 ratingElem.setAttribute("checked", "checked");
             }
-            //ratingElem.classList.add("hidden");
+
             newElem.appendChild(ratingElem);
 
             let newLabel = document.createElement("label");
@@ -570,7 +598,6 @@ function createBookDisplayItem(_e, _fieldName, _fieldContent, _parentElement) {
         let textContent = "";
 
         if (_fieldName == "Title:") {
-            //textContent = _fieldContent;
             newElem.setAttribute("value", _fieldContent);
         } else if (_fieldName == "Page count:") {
             newElem.setAttribute("type", "number");
@@ -580,11 +607,6 @@ function createBookDisplayItem(_e, _fieldName, _fieldContent, _parentElement) {
         } else if (_fieldName == "Format:") {
             newElem.setAttribute("type", "list");
             newElem.setAttribute("value", _fieldContent);
-        // } else if (_fieldName == "Read:") {
-        //     newElem.setAttribute("type", "checkbox");
-        //     if (_fieldContent == "Yes") {
-        //         newElem.setAttribute("checked", "checked");
-        //     }
         } else if (_fieldName == "Date read:") {
             newElem.setAttribute("type", "date");
             newElem.setAttribute("value", _fieldContent || "");
@@ -597,13 +619,6 @@ function createBookDisplayItem(_e, _fieldName, _fieldContent, _parentElement) {
         newElem.setAttribute("name", `${snakeClassName}-input-${_e.id}`);
         newElem.classList.add("hidden");
     }
-
-    // if (!_fieldIsValid) {
-    //     //newElem.style.display = "none";
-    //     //newElem.classList.add("invalid");
-    //     //rowElem.style.display = "none";
-    //     rowElem.classList.add("invalid");
-    // }
 
     rowElem.appendChild(newElem);
     _parentElement.appendChild(rowElem);
