@@ -14,45 +14,45 @@
     <form class="content" style="display: none;">
         <div class="book-field-row title">
             <div class="book-field-name title">Title:</div>
-            <div class="book-field-content title">The Mountain in the Sea</div>
-            <input value="The Mountain in the Sea" class="book-field-input title hidden" name="title-input">
+            <div class="book-field-content title"></div>
+            <input value="" class="book-field-input title hidden" name="title-input">
         </div>
         <div class="book-field-row author">
             <div class="book-field-name author">Author:</div>
             <div class="book-field-content author-container">
-                <div class="book-field-content author-0" style="margin-right: 0.5ch;">Ray</div>
-                <div class="book-field-content author-1">Nayler</div>
+                <div class="book-field-content author-0" style="margin-right: 0.5ch;"></div>
+                <div class="book-field-content author-1"></div>
             </div>
             <div class="book-field-input author hidden" style="grid-auto-flow: column;">
-                <input class="book-field-input author-0" value="Ray" name="author-0-input">
-                <input class="book-field-input author-1" value="Nayler" name="author-1-input">
+                <input class="book-field-input author-0" value="" name="author-0-input">
+                <input class="book-field-input author-1" value="" name="author-1-input">
             </div>
         </div>
         <div class="book-field-row description">
             <div class="book-field-name description">Description:</div>
-            <div class="book-field-content description">BOOK DESCRIPTION TEXT</div>
-            <textarea class="book-field-input description hidden" name="description-input" value="BOOK DESCRIPTION TEXT">BOOK DESCRIPTION TEXT</textarea>
+            <div class="book-field-content description"></div>
+            <textarea class="book-field-input description hidden" name="description-input"></textarea>
         </div>
         <div class="book-field-row page-count">
             <div class="book-field-name page-count">Page count:</div>
-            <div class="book-field-content page-count">464</div>
-            <input type="number" value="464" class="book-field-input page-count hidden" name="page-count-input">
+            <div class="book-field-content page-count"></div>
+            <input type="number" value="" class="book-field-input page-count hidden" name="page-count-input">
         </div>
         <div class="book-field-row format">
             <div class="book-field-name format">Format:</div>
-            <div class="book-field-content format">Digital</div>
+            <div class="book-field-content format">N/A</div>
             <select class="book-field-input format hidden" name="format-input">
-                <option class="format-0" value="N/A">N/A</option>
+                <option class="format-0" value="N/A" selected="selected">N/A</option>
                 <option class="format-1" value="Print">Print</option>
-                <option class="format-2" value="Digital" selected="selected">Digital</option>
+                <option class="format-2" value="Digital">Digital</option>
             </select>
         </div>
         <div class="book-field-row read">
             <div class="book-field-name read">Read:</div>
-            <div class="book-field-content read">Yes</div>
+            <div class="book-field-content read">N/A</div>
             <select class="book-field-input read hidden" name="read-input">
-                <option class="read-0" value="N/A">N/A</option>
-                <option class="read-1" value="Yes" selected="selected">Yes</option>
+                <option class="read-0" value="N/A" selected="selected">N/A</option>
+                <option class="read-1" value="Yes">Yes</option>
                 <option class="read-2" value="No">No</option>
             </select>
         </div>
@@ -63,19 +63,19 @@
         </div>
         <div class="book-field-row rating">
             <div class="book-field-name rating">Rating:</div>
-            <div class="book-field-content rating">4/5</div>
+            <div class="book-field-content rating">N/A</div>
             <fieldset class="book-field-input hidden" style="grid-auto-flow: column;">
-                <input class="book-field-input rating" type="radio" name="rating-input" id="rating-input-0" value="N/A">
+                <input class="book-field-input rating idx-0" type="radio" name="rating-input" id="rating-input-0" value="N/A" checked="checked">
                 <label for="rating-input-0" class="rating-input-label">N/A</label>
-                <input class="book-field-input rating" type="radio" name="rating-input" id="rating-input-1" value="1/5">
+                <input class="book-field-input rating idx-1" type="radio" name="rating-input" id="rating-input-1" value="1/5">
                 <label for="rating-input-1" class="rating-input-label">1</label>
-                <input class="book-field-input rating" type="radio" name="rating-input" id="rating-input-2" value="2/5">
+                <input class="book-field-input rating idx-2" type="radio" name="rating-input" id="rating-input-2" value="2/5">
                 <label for="rating-input-2" class="rating-input-label">2</label>
-                <input class="book-field-input rating" type="radio" name="rating-input" id="rating-input-3" value="3/5">
+                <input class="book-field-input rating idx-3" type="radio" name="rating-input" id="rating-input-3" value="3/5">
                 <label for="rating-input-3" class="rating-input-label">3</label>
-                <input class="book-field-input rating" type="radio" name="rating-input" id="rating-input-4" value="4/5" checked="checked">
+                <input class="book-field-input rating idx-4" type="radio" name="rating-input" id="rating-input-4" value="4/5">
                 <label for="rating-input-4" class="rating-input-label">4</label>
-                <input class="book-field-input rating" type="radio" name="rating-input" id="rating-input-5" value="5/5">
+                <input class="book-field-input rating idx-5" type="radio" name="rating-input" id="rating-input-5" value="5/5">
                 <label for="rating-input-5" class="rating-input-label">5</label>
             </fieldset>
         </div>
