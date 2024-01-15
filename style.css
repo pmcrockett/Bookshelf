@@ -193,6 +193,7 @@ input.author-0, input.author-1 {
 
 .book-field-input.author {
     display: flex;
+    gap: 8px;
     flex-wrap: wrap;
 }
 
