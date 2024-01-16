@@ -16,6 +16,7 @@ function BookButton(_book) {
     this.button = clone.querySelector("button");
     this.button.classList.add(`id-${_book.id}`);
     this.svgPath = this.button.querySelector(`svg > path`);
+    this.svgTitle = this.button.querySelector(`svg > title`);
     this.textDiv = this.button.querySelector(".book-button-text");
     this.book = _book;
     this.setRightArrow();
@@ -53,8 +54,11 @@ BookButton.prototype.click = function(_e) {
 
 BookButton.prototype.updateText = function() {
     const combinedAuthor = this.book.getCombinedAuthor(-1);
-    this.textDiv.textContent = this.book.title + 
-        `${combinedAuthor.length ? ` (${combinedAuthor})` : ""}`;
+    const buttonText = this.book.title + 
+        `${combinedAuthor.length ? ` (${combinedAuthor})` : ""}`
+    this.textDiv.textContent = buttonText;
+    this.button.setAttribute("title", buttonText)
+    this.svgTitle.textContent = buttonText;
 }
 
 function Book(_title, _authorFirst, _authorLast, _pageCount, _desc, _format, 
@@ -95,6 +99,7 @@ Book.prototype.buildForm = function() {
     const formTemplate = document.querySelector("#form-template");
     clone = formTemplate.content.cloneNode(true);
     this.form = clone.querySelector("form");
+    this.titleInput = this.form.querySelector(".book-field-input.title");
 
     let allElems = this.form.querySelectorAll("*");
     let allRating = this.form.querySelectorAll(".rating");
@@ -125,7 +130,8 @@ Book.prototype.buildHTML = function() {
     this.fieldInput = this.form.getElementsByClassName(`id-${this.id} book-field-input`);
 
     this.editButton = this.form.querySelector(".svg-button.edit");
-    this.editButtonSvgPath = this.form.querySelector(`button.id-${this.id}.edit > svg > path`);
+    this.editButtonSvgPath = this.editButton.querySelector(`svg > path`);
+    this.svgEditTitle = this.editButton.querySelector(`svg > title`);
     this.editButton.addEventListener("click", this.clickEdit.bind(this));
 
     this.deleteButton = this.form.querySelector(".svg-button.delete");
@@ -146,6 +152,7 @@ Book.prototype.showInput = function() {
 
     this.prefillForm();
     this.editButton.classList.add("is-editing");
+    this.svgEditTitle.textContent = "Confirm";
     this.editButtonSvgPath.setAttribute("d", this.submitSvg);
 }
 
@@ -177,6 +184,7 @@ Book.prototype.hideInput = function() {
 
     this.bookButton.updateText(this.title, this["author-0"], this["author-1"]);
     this.editButton.classList.remove("is-editing");
+    this.svgEditTitle.textContent = "Edit book";
     this.editButtonSvgPath.setAttribute("d", this.editSvg);
 }
 
@@ -187,6 +195,8 @@ Book.prototype.clickEdit = function(_e) {
 
     if (!this.fieldContent[0].classList.contains("hidden")) {
         this.showInput();
+        this.titleInput.focus();
+        this.titleInput.setSelectionRange(this.title.length, this.title.length);
     } else {
         this.hideInput();
     }
@@ -315,6 +325,11 @@ Book.prototype.applyInput = function(_formDat, _snakeClassName) {
     }
 }
 
+Book.prototype.selectTitleInput = function() {
+    this.titleInput.focus();
+    this.titleInput.select();
+}
+
 Book.prototype.autoSubmit = function() {
     if (this.editButton && this.editButton.classList.contains("is-editing")) {
         this.clickEdit(null);
@@ -343,18 +358,21 @@ Book.prototype.getCombinedAuthor = function(_order) {
 }
 
 function Bookshelf(_books) {
+    const timer = new Date().getTime();
     this.bookListDiv = document.querySelector(".book-list");
     this.bookList = [];
+
     _books.forEach(_e => {
-        this.addBook(_e);
+        this.addBook(_e, this.bookListDiv);
     });
 }
 
-Bookshelf.prototype.addBook = function(_book) {
+Bookshelf.prototype.addBook = function(_book, _parent) {
     this.bookList.splice(0, 0, _book);
     _book.setShelf(this);
     _book.buildHTML();
-    _book.appendHTML(this.bookListDiv);
+    _parent.insertAdjacentElement("afterbegin", _book.form);
+    _parent.insertAdjacentElement("afterbegin", _book.bookButton.button);
 }
 
 Bookshelf.prototype.removeBook = function(_id) {
@@ -393,17 +411,13 @@ Bookshelf.prototype.sort = function(_field, _dir) {
         }
         return val1 > val2 ? _dir : _dir * -1;
     });
-
-    this.reinitHTML();
 }
 
 Bookshelf.prototype.reinitHTML = function() {
-    this.bookList.forEach(_e =>  {
-        _e.autoSubmit();
-        _e.removeHTML();
-    });
+    this.bookListDiv.innerHTML = null;
 
     this.bookList.forEach(_e =>  {
+        _e.autoSubmit();
         _e.appendHTML(this.bookListDiv);
     });
 }
@@ -428,42 +442,49 @@ function initButtonListeners(_shelf) {
     newBookButton.addEventListener("click", _event => {
         window.scrollTo(0, 0);
         const newBook = new Book();
-        _shelf.addBook(newBook);
-        _shelf.reinitHTML();
+        _shelf.addBook(newBook, _shelf.bookListDiv);
+        //_shelf.reinitHTML();
         newBook.bookButton.click(null);
         newBook.clickEdit(null);
+        newBook.selectTitleInput();
     });
     
     authorAscButton.addEventListener("click", _event => {
         _shelf.sort("title", 1);
         _shelf.sort("author-1", 1);
+        _shelf.reinitHTML();
     });
     
     authorDescButton.addEventListener("click", _event => {
         _shelf.sort("title", 1);
         _shelf.sort("author-1", -1);
+        _shelf.reinitHTML();
     });
     
     titleAscButton.addEventListener("click", _event => {
         _shelf.sort("author-1", 1);
         _shelf.sort("title", 1);
+        _shelf.reinitHTML();
     });
     
     titleDescButton.addEventListener("click", _event => {
         _shelf.sort("author-1", 1);
         _shelf.sort("title", -1);
+        _shelf.reinitHTML();
     });
     
     ratingAscButton.addEventListener("click", _event => {
         _shelf.sort("title", 1);
         _shelf.sort("author-1", 1);
         _shelf.sort("rating", 1);
+        _shelf.reinitHTML();
     });
     
     ratingDescButton.addEventListener("click", _event => {
         _shelf.sort("title", 1);
         _shelf.sort("author-1", 1);
         _shelf.sort("rating", -1);
+        _shelf.reinitHTML();
     });
     
     expandButton.addEventListener("click", _shelf.expandAll.bind(_shelf));
@@ -497,7 +518,13 @@ function getDefaultBooks() {
     newBook[7] = new Book("The Final Empire", "Brandon", "Sanderson", "537",
         `For a thousand years the ash fell and no flowers bloomed. For a thousand years the Skaa slaved in misery and lived in fear. For a thousand years the Lord Ruler, the "Sliver of Infinity," reigned with absolute power and ultimate terror, divinely invincible. Then, when hope was so long lost that not even its memory remained, a terribly scarred, heart-broken half-Skaa rediscovered it in the depths of the Lord Ruler's most hellish prison. Kelsier "snapped" and found in himself the powers of a Mistborn. A brilliant thief and natural leader, he turned his talents to the ultimate caper, with the Lord Ruler himself as the mark.\n\nKelsier recruited the underworld's elite, the smartest and most trustworthy allomancers, each of whom shares one of his many powers, and all of whom relish a high-stakes challenge. Then Kelsier reveals his ultimate dream, not just the greatest heist in history, but the downfall of the divine despot.\n\nBut even with the best criminal crew ever assembled, Kel's plan looks more like the ultimate long shot, until luck brings a ragged girl named Vin into his life. Like him, she's a half-Skaa orphan, but she's lived a much harsher life. Vin has learned to expect betrayal from everyone she meets. She will have to learn trust if Kel is to help her master powers of which she never dreamed.\n\nBrandon Sanderson, fantasy's newest master tale-spinner and author of the acclaimed debut Elantris, dares to turn a genre on its head by asking a simple question: What if the prophesied hero failed to defeat the Dark Lord? The answer will be found in the Mistborn Trilogy, a saga of surprises that begins with the book in your hands. Fantasy will never be the same again.\n\n(From Goodreads.com)`,
         "Digital", "Yes", "3/5", "2023-01-01");
-    return newBook;    
+    
+    // Stress test
+    // for (let i = 0; i < 1992; i++) {
+    //     newBook.push(new Book("Test Book", "Jane", "Doe"));
+    // }
+    
+    return newBook;
 }
 
 const newBookButton = document.querySelector(".new-book");
