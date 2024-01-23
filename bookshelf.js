@@ -10,432 +10,458 @@ String.prototype.removeLeadingArticle = function() {
     return str;
 }
 
-function BookButton(_book) {
-    const buttonTemplate = document.querySelector("#book-button-template");
-    const clone = buttonTemplate.content.cloneNode(true);
-    this.button = clone.querySelector("button");
-    this.button.classList.add(`id-${_book.id}`);
-    this.svgPath = this.button.querySelector(`svg > path`);
-    this.svgTitle = this.button.querySelector(`svg > title`);
-    this.textDiv = this.button.querySelector(".book-button-text");
-    this.book = _book;
-    this.setRightArrow();
+class BookButton {
+    button;
+    svgPath;
+    svgTitle;
+    textDiv;
+    book;
+    static rightArrowSvg = "M2,12A10,10 0 0,1 12,2A10,10 0 0,1 22,12A10,10 0 0,1 12,22A10,10 0 0,1 2,12M10,17L15,12L10,7V17Z";
+    static downArrowSvg = "M12,2A10,10 0 0,1 22,12A10,10 0 0,1 12,22A10,10 0 0,1 2,12A10,10 0 0,1 12,2M7,10L12,15L17,10H7Z";
 
-    this.button.addEventListener("click", this.click.bind(this));
-}
+    constructor(_book) {
+        const buttonTemplate = document.querySelector("#book-button-template");
+        const clone = buttonTemplate.content.cloneNode(true);
+        this.button = clone.querySelector("button");
+        this.button.classList.add(`id-${_book.id}`);
+        this.button.addEventListener("click", e => {this.click(e)});
+        this.svgPath = this.button.querySelector(`svg > path`);
+        this.svgTitle = this.button.querySelector(`svg > title`);
+        this.textDiv = this.button.querySelector(".book-button-text");
+        this.book = _book;
 
-BookButton.prototype.rightArrowSvg = "M2,12A10,10 0 0,1 12,2A10,10 0 0,1 22,12A10,10 0 0,1 12,22A10,10 0 0,1 2,12M10,17L15,12L10,7V17Z";
-BookButton.prototype.downArrowSvg = "M12,2A10,10 0 0,1 22,12A10,10 0 0,1 12,22A10,10 0 0,1 2,12A10,10 0 0,1 12,2M7,10L12,15L17,10H7Z";
-
-BookButton.prototype.setRightArrow = function() {
-    this.svgPath.setAttribute("d", this.rightArrowSvg);
-}
-
-BookButton.prototype.setDownArrow = function() {
-    this.svgPath.setAttribute("d", this.downArrowSvg);
-}
-
-BookButton.prototype.click = function(_e) {
-    this.button.classList.toggle("active");
-    let content = this.button.nextElementSibling;
-
-    this.book.autoSubmit();
-
-    if (content.style.display === "grid") {
-        content.style.display = "none";
-        this.book.expand = false;
         this.setRightArrow();
-    } else {
-        content.style.display = "grid";
-        this.book.expand = true;
-        this.setDownArrow();
+    }
+
+    setRightArrow() {
+        this.svgPath.setAttribute("d", BookButton.rightArrowSvg);
+    }
+
+    setDownArrow() {
+        this.svgPath.setAttribute("d", BookButton.downArrowSvg);
+    }
+
+    click(_e) {
+        this.button.classList.toggle("active");
+        let content = this.button.nextElementSibling;
+    
+        this.book.autoSubmit();
+    
+        if (content.style.display === "grid") {
+            content.style.display = "none";
+            this.book.expand = false;
+            this.setRightArrow();
+        } else {
+            content.style.display = "grid";
+            this.book.expand = true;
+            this.setDownArrow();
+        }
+    }
+    
+    updateText() {
+        const combinedAuthor = this.book.getCombinedAuthor(-1);
+        const buttonText = this.book.title + 
+            `${combinedAuthor.length ? ` (${combinedAuthor})` : ""}`
+        this.textDiv.textContent = buttonText;
+        this.button.setAttribute("title", buttonText)
+        this.svgTitle.textContent = buttonText;
     }
 }
 
-BookButton.prototype.updateText = function() {
-    const combinedAuthor = this.book.getCombinedAuthor(-1);
-    const buttonText = this.book.title + 
-        `${combinedAuthor.length ? ` (${combinedAuthor})` : ""}`
-    this.textDiv.textContent = buttonText;
-    this.button.setAttribute("title", buttonText)
-    this.svgTitle.textContent = buttonText;
-}
+class Book {
+    title;
+    ["author-0"];
+    ["author-1"];
+    ["page-count"];
+    description;
+    format;
+    read;
+    rating;
+    ["date-read"];
+    id;
+    expand;
 
-function Book(_title, _authorFirst, _authorLast, _pageCount, _desc, _format, 
-        _read, _rating, _dateRead) {
-    this.title = _title || "[untitled]";
-    this["author-0"] = _authorFirst || "";
-    this["author-1"] = _authorLast || "";
-    this["page-count"] = _pageCount || "";
-    this.description = _desc || "";
-    this.format = _format || "N/A";
-    this.read = _read || "N/A";
-    this.rating = _rating || "N/A";
-    this["date-read"] = _dateRead || "";
-    this.id = ++Book.prototype.lastId;
-    this.expand = false;
-}
+    static lastId = -1;
+    static editSvg = "M12,2C6.47,2 2,6.47 2,12C2,17.53 6.47,22 12,22C17.53,22 22,17.53 22,12C22,6.47 17.53,2 12,2M15.1,7.07C15.24,7.07 15.38,7.12 15.5,7.23L16.77,8.5C17,8.72 17,9.07 16.77,9.28L15.77,10.28L13.72,8.23L14.72,7.23C14.82,7.12 14.96,7.07 15.1,7.07M13.13,8.81L15.19,10.87L9.13,16.93H7.07V14.87L13.13,8.81Z";
+    static submitSvg = "M12 2C6.5 2 2 6.5 2 12S6.5 22 12 22 22 17.5 22 12 17.5 2 12 2M10 17L5 12L6.41 10.59L10 14.17L17.59 6.58L19 8L10 17Z";
+    static deleteSvg = "M12,2C17.53,2 22,6.47 22,12C22,17.53 17.53,22 12,22C6.47,22 2,17.53 2,12C2,6.47 6.47,2 12,2M17,7H14.5L13.5,6H10.5L9.5,7H7V9H17V7M9,18H15A1,1 0 0,0 16,17V10H8V17A1,1 0 0,0 9,18Z";
 
-Book.prototype.lastId = -1;
-Book.prototype.editSvg = "M12,2C6.47,2 2,6.47 2,12C2,17.53 6.47,22 12,22C17.53,22 22,17.53 22,12C22,6.47 17.53,2 12,2M15.1,7.07C15.24,7.07 15.38,7.12 15.5,7.23L16.77,8.5C17,8.72 17,9.07 16.77,9.28L15.77,10.28L13.72,8.23L14.72,7.23C14.82,7.12 14.96,7.07 15.1,7.07M13.13,8.81L15.19,10.87L9.13,16.93H7.07V14.87L13.13,8.81Z";
-Book.prototype.submitSvg = "M12 2C6.5 2 2 6.5 2 12S6.5 22 12 22 22 17.5 22 12 17.5 2 12 2M10 17L5 12L6.41 10.59L10 14.17L17.59 6.58L19 8L10 17Z";
-Book.prototype.deleteSvg = "M12,2C17.53,2 22,6.47 22,12C22,17.53 17.53,22 12,22C6.47,22 2,17.53 2,12C2,6.47 6.47,2 12,2M17,7H14.5L13.5,6H10.5L9.5,7H7V9H17V7M9,18H15A1,1 0 0,0 16,17V10H8V17A1,1 0 0,0 9,18Z";
-
-Book.prototype.setShelf = function(_shelf) {
-    this.shelf = _shelf;
-}
-
-Book.prototype.removeHTML = function() {
-    this.form.remove();
-    this.bookButton.button.remove();
-}
-
-Book.prototype.appendHTML = function(_parent) {
-    _parent.appendChild(this.bookButton.button);
-    _parent.appendChild(this.form);
-}
-
-Book.prototype.buildForm = function() {
-    const formTemplate = document.querySelector("#form-template");
-    clone = formTemplate.content.cloneNode(true);
-    this.form = clone.querySelector("form");
-    this.titleInput = this.form.querySelector(".book-field-input.title");
-
-    let allElems = this.form.querySelectorAll("*");
-    let allRating = this.form.querySelectorAll(".rating");
-    let allRatingLabel = this.form.querySelectorAll(".rating-input-label");
-
-    for (let e of allElems) {
-        e.classList.add(`id-${this.id}`)
-    }
-    for (let e of allRating) {
-        let id = e.getAttribute("id");
-        id += `-id-${this.id}`;
-        e.setAttribute("id", id);
-    }
-    for (let e of allRatingLabel) {
-        let forTag = e.getAttribute("for");
-        forTag += `-id-${this.id}`;
-        e.setAttribute("for", forTag);
-    }
-}
-
-Book.prototype.buildHTML = function() {
-    this.bookButton = new BookButton(this);
-    this.buildForm();
-
-    // Field content is only visible when not editing book data.
-    this.fieldContent = this.form.getElementsByClassName(`id-${this.id} book-field-content`);
-    // Field input is only visible when editing book data.
-    this.fieldInput = this.form.getElementsByClassName(`id-${this.id} book-field-input`);
-
-    this.editButton = this.form.querySelector(".svg-button.edit");
-    this.editButtonSvgPath = this.editButton.querySelector(`svg > path`);
-    this.svgEditTitle = this.editButton.querySelector(`svg > title`);
-    this.editButton.addEventListener("click", this.clickEdit.bind(this));
-
-    this.deleteButton = this.form.querySelector(".svg-button.delete");
-    this.deleteButton.addEventListener("click", this.clickDelete.bind(this));
-
-    this.prefillForm();
-    this.hideInput();
-}
-
-Book.prototype.showInput = function() {
-    for (let item of this.fieldContent) {
-        item.parentElement.classList.remove("invalid");
-        item.classList.add("hidden");
-    }
-    for (let item of this.fieldInput) {
-        item.classList.remove("hidden");
+    constructor(_title, _authorFirst, _authorLast, _pageCount, _desc, _format, 
+            _read, _rating, _dateRead) {
+        this.title = _title || "[untitled]";
+        this["author-0"] = _authorFirst || "";
+        this["author-1"] = _authorLast || "";
+        this["page-count"] = _pageCount || "";
+        this.description = _desc || "";
+        this.format = _format || "N/A";
+        this.read = _read || "N/A";
+        this.rating = _rating || "N/A";
+        this["date-read"] = _dateRead || "";
+        this.id = ++Book.lastId;
+        this.expand = false;
     }
 
-    this.prefillForm();
-    this.editButton.classList.add("is-editing");
-    this.svgEditTitle.textContent = "Confirm";
-    this.editButtonSvgPath.setAttribute("d", this.submitSvg);
-}
+    setShelf(_shelf) {
+        this.shelf = _shelf;
+    }
 
-Book.prototype.hideInput = function() {
-    let form = new FormData(this.form);
-    this.applyInput(form, "title");
-    this.applyInput(form, "author");
-    this.applyInput(form, "description");
-    this.applyInput(form, "page-count");
-    this.applyInput(form, "format");
-    this.applyInput(form, "read");
-    this.applyInput(form, "date-read");
-    this.applyInput(form, "rating");
+    removeHTML() {
+        this.form.remove();
+        this.bookButton.button.remove();
+    }
 
-    // If no title/author fields are filled, force title to be "[untitled]".
-    if (this.title === "" && this["author-0"] === "" && this["author-1"] === "") {
-        this.title = "[untitled]";
+    appendHTML(_parent) {
+        _parent.appendChild(this.bookButton.button);
+        _parent.appendChild(this.form);
+    }
+
+    buildForm() {
+        const formTemplate = document.querySelector("#form-template");
+        const clone = formTemplate.content.cloneNode(true);
+        this.form = clone.querySelector("form");
+        this.titleInput = this.form.querySelector(".book-field-input.title");
+
+        let allElems = this.form.querySelectorAll("*");
+        let allRating = this.form.querySelectorAll(".rating");
+        let allRatingLabel = this.form.querySelectorAll(".rating-input-label");
+
+        for (let e of allElems) {
+            e.classList.add(`id-${this.id}`)
+        }
+        for (let e of allRating) {
+            let id = e.getAttribute("id");
+            id += `-id-${this.id}`;
+            e.setAttribute("id", id);
+        }
+        for (let e of allRatingLabel) {
+            let forTag = e.getAttribute("for");
+            forTag += `-id-${this.id}`;
+            e.setAttribute("for", forTag);
+        }
+    }
+
+    buildHTML() {
+        this.bookButton = new BookButton(this);
+        this.buildForm();
+
+        // Field content is only visible when not editing book data.
+        this.fieldContent = this.form.getElementsByClassName(`id-${this.id} book-field-content`);
+        // Field input is only visible when editing book data.
+        this.fieldInput = this.form.getElementsByClassName(`id-${this.id} book-field-input`);
+
+        this.editButton = this.form.querySelector(".svg-button.edit");
+        this.editButtonSvgPath = this.editButton.querySelector(`svg > path`);
+        this.svgEditTitle = this.editButton.querySelector(`svg > title`);
+        this.editButton.addEventListener("click", this.clickEdit.bind(this));
+
+        this.deleteButton = this.form.querySelector(".svg-button.delete");
+        this.deleteButton.addEventListener("click", this.clickDelete.bind(this));
+
         this.prefillForm();
-        form = new FormData(this.form);
-        this.applyInput(form, "title");
-    }
-
-    for (let item of this.fieldContent) {
-        item.classList.remove("hidden");
-    }
-    for (let item of this.fieldInput) {
-        item.classList.add("hidden");
-    }
-
-    this.bookButton.updateText(this.title, this["author-0"], this["author-1"]);
-    this.editButton.classList.remove("is-editing");
-    this.svgEditTitle.textContent = "Edit book";
-    this.editButtonSvgPath.setAttribute("d", this.editSvg);
-}
-
-Book.prototype.clickEdit = function(_e) {
-    if (_e) {
-        _e.preventDefault();
-    }
-
-    if (!this.fieldContent[0].classList.contains("hidden")) {
-        this.showInput();
-        this.titleInput.focus();
-        this.titleInput.setSelectionRange(this.title.length, this.title.length);
-    } else {
         this.hideInput();
     }
-}
 
-Book.prototype.clickDelete = function(_e) {
-    _e.preventDefault();
-    this.removeHTML();
+    showInput() {
+        for (let item of this.fieldContent) {
+            item.parentElement.classList.remove("invalid");
+            item.classList.add("hidden");
+        }
+        for (let item of this.fieldInput) {
+            item.classList.remove("hidden");
+        }
 
-    if (this.shelf) {
-        this.shelf.removeBook(this.id);
-        this.shelf = null;
+        this.prefillForm();
+        this.editButton.classList.add("is-editing");
+        this.svgEditTitle.textContent = "Confirm";
+        this.editButtonSvgPath.setAttribute("d", Book.submitSvg);
     }
-}
 
-Book.prototype.prefillForm = function() {
-    const tags = ["title", "author-0", "author-1", "page-count", "format", 
-        "read", "date-read"]
-    
-    tags.forEach(_tag => {
-        let elem = this.form.querySelector(`.book-field-input.${_tag}`);
-        elem.setAttribute("value", this[_tag]);
-    });
+    hideInput() {
+        let form = new FormData(this.form);
+        this.applyInput(form, "title");
+        this.applyInput(form, "author");
+        this.applyInput(form, "description");
+        this.applyInput(form, "page-count");
+        this.applyInput(form, "format");
+        this.applyInput(form, "read");
+        this.applyInput(form, "date-read");
+        this.applyInput(form, "rating");
 
-    let descElem = this.form.querySelector(`.book-field-input.description`);
-    descElem.textContent = this.description;
+        // If no title/author fields are filled, force title to be "[untitled]".
+        if (this.title === "" && this["author-0"] === "" && this["author-1"] === "") {
+            this.title = "[untitled]";
+            this.prefillForm();
+            form = new FormData(this.form);
+            this.applyInput(form, "title");
+        }
 
-    let formatOption = this.form.querySelectorAll(`.format > option`);
-    for (let opt of formatOption) {
-        if (opt.textContent == this.format) {
-            opt.setAttribute("selected", "selected");
-            break;
+        for (let item of this.fieldContent) {
+            item.classList.remove("hidden");
+        }
+        for (let item of this.fieldInput) {
+            item.classList.add("hidden");
+        }
+
+        this.bookButton.updateText(this.title, this["author-0"], this["author-1"]);
+        this.editButton.classList.remove("is-editing");
+        this.svgEditTitle.textContent = "Edit book";
+        this.editButtonSvgPath.setAttribute("d", Book.editSvg);
+    }
+
+    clickEdit(_e) {
+        if (_e) {
+            _e.preventDefault();
+        }
+
+        if (!this.fieldContent[0].classList.contains("hidden")) {
+            this.showInput();
+            this.titleInput.focus();
+            this.titleInput.setSelectionRange(this.title.length, this.title.length);
+        } else {
+            this.hideInput();
         }
     }
 
-    let readOption = this.form.querySelectorAll(`.read > option`);
-    for (let opt of readOption) {
-        if (opt.textContent == this.read) {
-            opt.setAttribute("selected", "selected");
-            break;
+    clickDelete(_e) {
+        _e.preventDefault();
+        this.removeHTML();
+
+        if (this.shelf) {
+            this.shelf.removeBook(this.id);
+            this.shelf = null;
         }
     }
 
-    let ratingLabel = this.form.getElementsByClassName(`rating-input-label`);
-    for (let rating of ratingLabel) {
-        if (rating.textContent[0] == this["rating"][0]) {
-            const radioId = rating.getAttribute("for");
-            // radioId[13] gives us the index of the label (from 0 to 5)
-            let ratingInput = this.form.querySelector(`.rating.idx-${radioId[13]}`);
-            ratingInput.setAttribute("checked", "checked");
-            break;
-        }
-    }
-
-    this.form.reset();
-}
-
-Book.prototype.applyInput = function(_formDat, _snakeClassName) {
-    function insertLineBreaks(_elem, _text) {
-        _elem.textContent = "";
-        let textNode = document.createTextNode("");
+    prefillForm() {
+        const tags = ["title", "author-0", "author-1", "page-count", "format", 
+            "read", "date-read"]
         
-        for (let i = 0; i < _text.length; i++) {
-            if (_text.charCodeAt(i) == 10) {
-                _elem.appendChild(textNode);
-                textNode = document.createTextNode("");
-                _elem.appendChild(document.createElement("br"));
+        tags.forEach(_tag => {
+            let elem = this.form.querySelector(`.book-field-input.${_tag}`);
+            elem.setAttribute("value", this[_tag]);
+        });
+
+        let descElem = this.form.querySelector(`.book-field-input.description`);
+        descElem.textContent = this.description;
+
+        let formatOption = this.form.querySelectorAll(`.format > option`);
+        for (let opt of formatOption) {
+            if (opt.textContent == this.format) {
+                opt.setAttribute("selected", "selected");
+                break;
+            }
+        }
+
+        let readOption = this.form.querySelectorAll(`.read > option`);
+        for (let opt of readOption) {
+            if (opt.textContent == this.read) {
+                opt.setAttribute("selected", "selected");
+                break;
+            }
+        }
+
+        let ratingLabel = this.form.getElementsByClassName(`rating-input-label`);
+        for (let rating of ratingLabel) {
+            if (rating.textContent[0] == this["rating"][0]) {
+                const radioId = rating.getAttribute("for");
+                // radioId[13] gives us the index of the label (from 0 to 5)
+                let ratingInput = this.form.querySelector(`.rating.idx-${radioId[13]}`);
+                ratingInput.setAttribute("checked", "checked");
+                break;
+            }
+        }
+
+        this.form.reset();
+    }
+
+    applyInput(_formDat, _snakeClassName) {
+        function insertLineBreaks(_elem, _text) {
+            _elem.textContent = "";
+            let textNode = document.createTextNode("");
+            
+            for (let i = 0; i < _text.length; i++) {
+                if (_text.charCodeAt(i) == 10) {
+                    _elem.appendChild(textNode);
+                    textNode = document.createTextNode("");
+                    _elem.appendChild(document.createElement("br"));
+                } else {
+                    textNode.nodeValue += _text[i];
+                }
+            }
+        
+            _elem.appendChild(textNode);
+            return _elem;
+        }
+
+        let text = "";
+
+        if (_snakeClassName == "author") {
+            const first = _formDat.get(`${_snakeClassName}-0-input`) || "";
+            const last = _formDat.get(`${_snakeClassName}-1-input`) || "";
+            
+            let firstContent = this.form.querySelector(`.id-${this.id}.book-field-content.${_snakeClassName}-0`);
+            firstContent.textContent = first;
+            let lastContent = this.form.querySelector(`.id-${this.id}.book-field-content.${_snakeClassName}-1`);
+            lastContent.textContent = last;
+
+            if (first == "" && last == "") {
+                let rowToHide = this.form.querySelector(`.id-${this.id}.book-field-row.${_snakeClassName}`);
+                rowToHide.classList.add("invalid");
+            } else if (first.length) {
+                firstContent.style.marginRight = "0.5ch";
             } else {
-                textNode.nodeValue += _text[i];
+                firstContent.style.marginRight = "0px";
             }
+
+            this[_snakeClassName + "-0"] = first;
+            this[_snakeClassName + "-1"] = last;
+        } else {
+            text = _formDat.get(`${_snakeClassName}-input`) || "";
+
+            if (_snakeClassName == "page-count") {
+                if (text != "" && text != "0") {
+                    text = String(Math.max(1, parseInt(text)));
+                } else text = "";
+            }
+            
+            const row = this.form.querySelector(`.id-${this.id}.book-field-row.${_snakeClassName}`);
+            if (((_snakeClassName == "format" || _snakeClassName == "read" 
+                    || _snakeClassName == "rating") && text === "N/A") 
+                    || text == "") {
+                row.classList.add("invalid");
+            } else {
+                row.classList.remove("invalid");
+            };
+            
+            let elem = this.form.querySelector(`.id-${this.id}.book-field-content.${_snakeClassName}`);
+
+            if (_snakeClassName == "description") {
+                elem = insertLineBreaks(elem, text);
+            } else {
+                elem.textContent = text;
+            }
+            
+            this[_snakeClassName] = text;;
+        }
+    }
+
+    selectTitleInput() {
+        this.titleInput.focus();
+        this.titleInput.select();
+    }
+
+    autoSubmit() {
+        if (this.editButton && this.editButton.classList.contains("is-editing")) {
+            this.clickEdit(null);
+        }
+    }
+
+    getCombinedAuthor(_order) {
+        _order = _order > 0 ? 1 : -1;
+        const first = this["author-0"];
+        const last = this["author-1"];
+        let combinedAuthor = "";
+
+        if (first && last) {
+            if (_order > 0) {
+                combinedAuthor = `${first} ${last}`;
+            } else {
+                combinedAuthor = `${last}, ${first}`;
+            }
+        } else if (last) {
+            combinedAuthor = `${last}`;
+        } else if (first) {
+            combinedAuthor = `${first}`;
+        }
+
+        return combinedAuthor;
+    }
+}
+
+class Bookshelf {
+    bookListDiv;
+    bookList;
+
+    constructor(_books) {
+        const timer = new Date().getTime();
+        this.bookListDiv = document.querySelector(".book-list");
+        this.bookList = [];
+    
+        _books.forEach(_e => {
+            this.addBook(_e, this.bookListDiv);
+        });
+    }
+
+    addBook(_book, _parent) {
+        this.bookList.splice(0, 0, _book);
+        _book.setShelf(this);
+        _book.buildHTML();
+        _parent.insertAdjacentElement("afterbegin", _book.form);
+        _parent.insertAdjacentElement("afterbegin", _book.bookButton.button);
+    }
+    
+    removeBook(_id) {
+        const idx = this.getBookIdxById(_id);
+        this.bookList.splice(idx, 1);
+    }
+    
+    getBookIdxById(_id) {
+        for (let i = 0; i < this.bookList.length; i++) {
+            if (this.bookList[i].id == _id) return i;
         }
     
-        _elem.appendChild(textNode);
-        return _elem;
+        return -1;
     }
-
-    let text = "";
-
-    if (_snakeClassName == "author") {
-        const first = _formDat.get(`${_snakeClassName}-0-input`) || "";
-        const last = _formDat.get(`${_snakeClassName}-1-input`) || "";
-        
-        let firstContent = this.form.querySelector(`.id-${this.id}.book-field-content.${_snakeClassName}-0`);
-        firstContent.textContent = first;
-        let lastContent = this.form.querySelector(`.id-${this.id}.book-field-content.${_snakeClassName}-1`);
-        lastContent.textContent = last;
-
-        if (first == "" && last == "") {
-            let rowToHide = this.form.querySelector(`.id-${this.id}.book-field-row.${_snakeClassName}`);
-            rowToHide.classList.add("invalid");
-        } else if (first.length) {
-            firstContent.style.marginRight = "0.5ch";
-        } else {
-            firstContent.style.marginRight = "0px";
-        }
-
-        this[_snakeClassName + "-0"] = first;
-        this[_snakeClassName + "-1"] = last;
-    } else {
-        text = _formDat.get(`${_snakeClassName}-input`) || "";
-
-        if (_snakeClassName == "page-count") {
-            if (text != "" && text != "0") {
-                text = String(Math.max(1, parseInt(text)));
-            } else text = "";
-        }
-        
-        const row = this.form.querySelector(`.id-${this.id}.book-field-row.${_snakeClassName}`);
-        if (((_snakeClassName == "format" || _snakeClassName == "read" 
-                || _snakeClassName == "rating") && text === "N/A") 
-                || text == "") {
-            row.classList.add("invalid");
-        } else {
-            row.classList.remove("invalid");
-        };
-        
-        let elem = this.form.querySelector(`.id-${this.id}.book-field-content.${_snakeClassName}`);
-
-        if (_snakeClassName == "description") {
-            elem = insertLineBreaks(elem, text);
-        } else {
-            elem.textContent = text;
-        }
-        
-        this[_snakeClassName] = text;;
-    }
-}
-
-Book.prototype.selectTitleInput = function() {
-    this.titleInput.focus();
-    this.titleInput.select();
-}
-
-Book.prototype.autoSubmit = function() {
-    if (this.editButton && this.editButton.classList.contains("is-editing")) {
-        this.clickEdit(null);
-    }
-}
-
-Book.prototype.getCombinedAuthor = function(_order) {
-    _order = _order > 0 ? 1 : -1;
-    const first = this["author-0"];
-    const last = this["author-1"];
-    let combinedAuthor = "";
-
-    if (first && last) {
-        if (_order > 0) {
-            combinedAuthor = `${first} ${last}`;
-        } else {
-            combinedAuthor = `${last}, ${first}`;
-        }
-    } else if (last) {
-        combinedAuthor = `${last}`;
-    } else if (first) {
-        combinedAuthor = `${first}`;
-    }
-
-    return combinedAuthor;
-}
-
-function Bookshelf(_books) {
-    const timer = new Date().getTime();
-    this.bookListDiv = document.querySelector(".book-list");
-    this.bookList = [];
-
-    _books.forEach(_e => {
-        this.addBook(_e, this.bookListDiv);
-    });
-}
-
-Bookshelf.prototype.addBook = function(_book, _parent) {
-    this.bookList.splice(0, 0, _book);
-    _book.setShelf(this);
-    _book.buildHTML();
-    _parent.insertAdjacentElement("afterbegin", _book.form);
-    _parent.insertAdjacentElement("afterbegin", _book.bookButton.button);
-}
-
-Bookshelf.prototype.removeBook = function(_id) {
-    const idx = this.getBookIdxById(_id);
-    this.bookList.splice(idx, 1);
-}
-
-Bookshelf.prototype.getBookIdxById = function(_id) {
-    for (let i = 0; i < this.bookList.length; i++) {
-        if (this.bookList[i].id == _id) return i;
-    }
-
-    return -1;
-}
-
-Bookshelf.prototype.sort = function(_field, _dir) {
-    _dir > 0 ? _dir = 1 : _dir = -1;
-
-    this.bookList.sort((_a, _b) => {
-        let val1 = _a[_field];
-        let val2 = _b[_field];
-
-        if (_field == "rating" || _field == "read" || _field == "format") {
-            if (val1 == "N/A") val1 = "";
-            if (val2 == "N/A") val2 = "";
-        }
-
-        if (typeof val1 === "string") {
-            val1 = val1.toLocaleLowerCase();
-            val2 = val2.toLocaleLowerCase();
-
-            if (_field === "title") {
-                val1 = val1.removeLeadingArticle();
-                val2 = val2.removeLeadingArticle();
+    
+    sort(_field, _dir) {
+        _dir > 0 ? _dir = 1 : _dir = -1;
+    
+        this.bookList.sort((_a, _b) => {
+            let val1 = _a[_field];
+            let val2 = _b[_field];
+    
+            if (_field == "rating" || _field == "read" || _field == "format") {
+                if (val1 == "N/A") val1 = "";
+                if (val2 == "N/A") val2 = "";
             }
-        }
-        return val1 > val2 ? _dir : _dir * -1;
-    });
-}
-
-Bookshelf.prototype.reinitHTML = function() {
-    this.bookListDiv.innerHTML = null;
-
-    this.bookList.forEach(_e =>  {
-        _e.autoSubmit();
-        _e.appendHTML(this.bookListDiv);
-    });
-}
-
-Bookshelf.prototype.expandAll = function(_e) {
-    this.bookList.forEach(_book => {
-        if (!_book.expand) {
-            _book.bookButton.click(null);
-        }
-    });
-}
-
-Bookshelf.prototype.collapseAll = function(_e) {
-    this.bookList.forEach(_book =>  {
-        if (_book.expand) {
-            _book.bookButton.click(null);
-        }
-    });
+    
+            if (typeof val1 === "string") {
+                val1 = val1.toLocaleLowerCase();
+                val2 = val2.toLocaleLowerCase();
+    
+                if (_field === "title") {
+                    val1 = val1.removeLeadingArticle();
+                    val2 = val2.removeLeadingArticle();
+                }
+            }
+            return val1 > val2 ? _dir : _dir * -1;
+        });
+    }
+    
+    reinitHTML() {
+        this.bookListDiv.innerHTML = null;
+    
+        this.bookList.forEach(_e =>  {
+            _e.autoSubmit();
+            _e.appendHTML(this.bookListDiv);
+        });
+    }
+    
+    expandAll(_e) {
+        this.bookList.forEach(_book => {
+            if (!_book.expand) {
+                _book.bookButton.click(null);
+            }
+        });
+    }
+    
+    collapseAll(_e) {
+        this.bookList.forEach(_book =>  {
+            if (_book.expand) {
+                _book.bookButton.click(null);
+            }
+        });
+    }
 }
 
 function initButtonListeners(_shelf) {
@@ -443,7 +469,6 @@ function initButtonListeners(_shelf) {
         window.scrollTo(0, 0);
         const newBook = new Book();
         _shelf.addBook(newBook, _shelf.bookListDiv);
-        //_shelf.reinitHTML();
         newBook.bookButton.click(null);
         newBook.clickEdit(null);
         newBook.selectTitleInput();
